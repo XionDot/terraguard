@@ -1,0 +1,224 @@
+name: Terraform Security Review
+
+on:
+  pull_request:
+    paths:
+      - '**.tf'
+      - '**.tf.json'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  review:
+    name: Review Terraform
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get changed Terraform files
+        id: changed-files
+        uses: tj-actions/changed-files@v44
+        with:
+          files: |
+            **.tf
+            **.tf.json
+
+      - name: Set up Python
+        if: steps.changed-files.outputs.any_changed == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        if: steps.changed-files.outputs.any_changed == 'true'
+        run: |
+          pip install anthropic
+
+      - name: Review Terraform files
+        if: steps.changed-files.outputs.any_changed == 'true'
+        id: review
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          cat << 'SCRIPT' > review.py
+          import os
+          import json
+          import sys
+          from anthropic import Anthropic
+
+          client = Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+
+          REVIEW_PROMPT = """You are a senior cloud architect. Analyze this Terraform configuration and return a JSON response.
+
+          IMPORTANT: Return ONLY valid JSON, no markdown or explanation outside the JSON.
+
+          {
+            "summary": "2-3 sentence overview",
+            "overall_score": <number 0-100>,
+            "issues": [
+              {
+                "severity": "critical" | "warning" | "info",
+                "category": "security" | "cost" | "reliability" | "best-practice",
+                "title": "Short title",
+                "description": "What's wrong and why",
+                "resource": "resource name",
+                "fix_code": "corrected code snippet"
+              }
+            ],
+            "positives": ["things done well"]
+          }
+
+          Severity: critical = security vulnerabilities, warning = important issues, info = suggestions
+          Categories: security, cost, reliability, best-practice
+
+          TERRAFORM CONFIG:
+          ```hcl
+          {content}
+          ```"""
+
+          def review_file(filepath):
+              with open(filepath, 'r') as f:
+                  content = f.read()
+
+              response = client.messages.create(
+                  model="claude-sonnet-4-20250514",
+                  max_tokens=4096,
+                  messages=[{"role": "user", "content": REVIEW_PROMPT.format(content=content)}]
+              )
+
+              text = response.content[0].text
+              # Extract JSON
+              if "```json" in text:
+                  text = text.split("```json")[1].split("```")[0]
+              elif "```" in text:
+                  text = text.split("```")[1].split("```")[0]
+
+              return json.loads(text.strip())
+
+          def format_review(filepath, review):
+              critical = [i for i in review.get("issues", []) if i["severity"] == "critical"]
+              warnings = [i for i in review.get("issues", []) if i["severity"] == "warning"]
+              infos = [i for i in review.get("issues", []) if i["severity"] == "info"]
+
+              lines = [
+                  f"## {filepath}",
+                  f"**Score: {review.get('overall_score', 'N/A')}/100** | "
+                  f":red_circle: {len(critical)} Critical | "
+                  f":warning: {len(warnings)} Warnings | "
+                  f":information_source: {len(infos)} Info",
+                  "",
+                  f"> {review.get('summary', 'No summary')}",
+                  ""
+              ]
+
+              if critical:
+                  lines.append("### :red_circle: Critical Issues")
+                  for issue in critical:
+                      lines.append(f"- **{issue['title']}** ({issue.get('resource', 'N/A')})")
+                      lines.append(f"  {issue['description']}")
+                      if issue.get("fix_code"):
+                          lines.append(f"  <details><summary>Fix</summary>\n\n  ```hcl\n  {issue['fix_code']}\n  ```\n  </details>")
+                  lines.append("")
+
+              if warnings:
+                  lines.append("### :warning: Warnings")
+                  for issue in warnings:
+                      lines.append(f"- **{issue['title']}**: {issue['description']}")
+                  lines.append("")
+
+              if infos:
+                  lines.append("### :information_source: Suggestions")
+                  for issue in infos:
+                      lines.append(f"- {issue['title']}: {issue['description']}")
+                  lines.append("")
+
+              positives = review.get("positives", [])
+              if positives:
+                  lines.append("### :white_check_mark: What's Good")
+                  for p in positives:
+                      lines.append(f"- {p}")
+
+              return "\n".join(lines)
+
+          if __name__ == "__main__":
+              files = sys.argv[1:]
+              if not files:
+                  print("No Terraform files to review")
+                  sys.exit(0)
+
+              all_reviews = []
+              has_critical = False
+
+              for filepath in files:
+                  if not os.path.exists(filepath):
+                      continue
+                  try:
+                      review = review_file(filepath)
+                      all_reviews.append(format_review(filepath, review))
+                      if any(i["severity"] == "critical" for i in review.get("issues", [])):
+                          has_critical = True
+                  except Exception as e:
+                      all_reviews.append(f"## {filepath}\n:x: Error reviewing file: {str(e)}")
+
+              output = "# Terraform Security Review\n\n" + "\n\n---\n\n".join(all_reviews)
+              output += "\n\n---\n*Generated by Cloud Architecture Review Agent*"
+
+              # Write to file for GitHub Actions
+              with open("review_output.md", "w") as f:
+                  f.write(output)
+
+              # Set output
+              print(f"has_critical={'true' if has_critical else 'false'}")
+
+              sys.exit(1 if has_critical else 0)
+          SCRIPT
+
+          python review.py ${{ steps.changed-files.outputs.all_changed_files }} || echo "has_critical=true" >> $GITHUB_OUTPUT
+
+      - name: Comment on PR
+        if: steps.changed-files.outputs.any_changed == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const review = fs.readFileSync('review_output.md', 'utf8');
+
+            // Find existing comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const botComment = comments.find(c =>
+              c.user.type === 'Bot' &&
+              c.body.includes('Terraform Security Review')
+            );
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: review
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: review
+              });
+            }
+
+      - name: Fail if critical issues
+        if: steps.review.outputs.has_critical == 'true'
+        run: |
+          echo "::error::Critical security issues found in Terraform files"
+          exit 1

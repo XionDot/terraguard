@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TerraGuard - Infrastructure Security</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg: #0a0a0f;
+            --bg-secondary: #12121a;
+            --card: rgba(255,255,255,0.03);
+            --card-hover: rgba(255,255,255,0.06);
+            --border: rgba(255,255,255,0.08);
+            --text: #ffffff;
+            --text-secondary: #a1a1aa;
+            --accent: #6366f1;
+            --accent-glow: rgba(99,102,241,0.4);
+            --critical: #f43f5e;
+            --critical-glow: rgba(244,63,94,0.3);
+            --warning: #f59e0b;
+            --warning-glow: rgba(245,158,11,0.3);
+            --info: #3b82f6;
+            --success: #10b981;
+            --success-glow: rgba(16,185,129,0.3);
+            --gradient-1: linear-gradient(135deg, #6366f1, #8b5cf6, #d946ef);
+            --gradient-2: linear-gradient(135deg, #10b981, #3b82f6);
+        }
+
+        :root.light {
+            --bg: #fafafa;
+            --bg-secondary: #ffffff;
+            --card: rgba(0,0,0,0.02);
+            --card-hover: rgba(0,0,0,0.04);
+            --border: rgba(0,0,0,0.08);
+            --text: #18181b;
+            --text-secondary: #71717a;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated background */
+        .bg-gradient {
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99,102,241,0.15), transparent),
+                radial-gradient(ellipse 60% 40% at 100% 100%, rgba(139,92,246,0.1), transparent),
+                radial-gradient(ellipse 40% 30% at 0% 100%, rgba(16,185,129,0.08), transparent);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        :root.light .bg-gradient { opacity: 0.5; }
+
+        .app {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        header {
+            padding: 20px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(20px);
+            background: rgba(10,10,15,0.5);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        :root.light header { background: rgba(255,255,255,0.8); }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--gradient-1);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 20px var(--accent-glow);
+        }
+
+        .logo-icon svg { width: 20px; height: 20px; color: white; }
+
+        .logo h1 {
+            font-size: 18px;
+            font-weight: 600;
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-actions { display: flex; gap: 12px; align-items: center; }
+
+        .theme-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            color: var(--text);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .theme-btn:hover {
+            background: var(--card-hover);
+            border-color: var(--accent);
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .theme-btn svg { width: 18px; height: 18px; }
+        .theme-btn .sun { display: none; }
+        :root.light .theme-btn .sun { display: block; }
+        :root.light .theme-btn .moon { display: none; }
+
+        /* Main */
+        main {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 0;
+            max-width: 1600px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* Input Section */
+        .input-section {
+            padding: 32px;
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .section-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        .upload-area {
+            position: relative;
+            border: 2px dashed var(--border);
+            border-radius: 16px;
+            padding: 40px 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: var(--card);
+        }
+
+        .upload-area:hover {
+            border-color: var(--accent);
+            background: var(--card-hover);
+            box-shadow: 0 0 40px var(--accent-glow);
+        }
+
+        .upload-area.has-file {
+            border-color: var(--success);
+            border-style: solid;
+            box-shadow: 0 0 40px var(--success-glow);
+        }
+
+        .upload-area input { display: none; }
+
+        .upload-icon {
+            width: 56px;
+            height: 56px;
+            margin: 0 auto 16px;
+            background: var(--gradient-1);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 32px var(--accent-glow);
+        }
+
+        .upload-area.has-file .upload-icon {
+            background: var(--gradient-2);
+            box-shadow: 0 8px 32px var(--success-glow);
+        }
+
+        .upload-icon svg { width: 28px; height: 28px; color: white; }
+
+        .upload-title {
+            font-size: 15px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .upload-subtitle {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .code-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        textarea {
+            flex: 1;
+            min-height: 200px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            font-family: 'JetBrains Mono', 'SF Mono', Monaco, monospace;
+            font-size: 13px;
+            color: var(--text);
+            resize: none;
+            transition: all 0.2s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px var(--accent-glow);
+        }
+
+        textarea::placeholder { color: var(--text-secondary); }
+
+        .scan-btn {
+            padding: 16px 32px;
+            background: var(--gradient-1);
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 24px var(--accent-glow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .scan-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, transparent, rgba(255,255,255,0.2), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.5s;
+        }
+
+        .scan-btn:hover::before { transform: translateX(100%); }
+        .scan-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 32px var(--accent-glow); }
+        .scan-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        /* Results Section */
+        .results-section {
+            padding: 32px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Empty State */
+        .empty-state {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            opacity: 0.6;
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+            opacity: 0.3;
+        }
+
+        .empty-state p { font-size: 15px; color: var(--text-secondary); }
+
+        /* Loading */
+        .loading-state {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 32px;
+        }
+
+        .loading-ring {
+            width: 80px;
+            height: 80px;
+            position: relative;
+        }
+
+        .loading-ring::before, .loading-ring::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            border: 3px solid transparent;
+        }
+
+        .loading-ring::before {
+            border-top-color: var(--accent);
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-ring::after {
+            border-right-color: var(--success);
+            animation: spin 1.5s linear infinite reverse;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .loading-text {
+            font-size: 15px;
+            color: var(--text-secondary);
+        }
+
+        /* Results */
+        .results-content { display: none; flex-direction: column; gap: 24px; flex: 1; overflow: hidden; }
+
+        /* Score Card */
+        .score-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            backdrop-filter: blur(20px);
+        }
+
+        .score-ring {
+            width: 100px;
+            height: 100px;
+            position: relative;
+        }
+
+        .score-ring svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+
+        .score-ring circle {
+            fill: none;
+            stroke-width: 8;
+            stroke-linecap: round;
+        }
+
+        .score-ring .bg { stroke: var(--border); }
+
+        .score-ring .progress {
+            stroke: url(#scoreGradient);
+            stroke-dasharray: 251;
+            stroke-dashoffset: 251;
+            transition: stroke-dashoffset 1s ease-out;
+        }
+
+        .score-value {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .score-info { flex: 1; }
+        .score-info h3 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+        .score-info p { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+
+        .score-badges {
+            display: flex;
+            gap: 8px;
+        }
+
+        .score-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: 24px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .score-badge.critical { background: rgba(244,63,94,0.15); color: var(--critical); }
+        .score-badge.warning { background: rgba(245,158,11,0.15); color: var(--warning); }
+        .score-badge.info { background: rgba(59,130,246,0.15); color: var(--info); }
+        .score-badge.success {
+            background: rgba(16,185,129,0.15);
+            color: var(--success);
+            transition: all 0.2s;
+        }
+        .score-badge.success:hover {
+            background: rgba(16,185,129,0.25);
+            box-shadow: 0 0 20px var(--success-glow);
+            transform: translateY(-2px);
+        }
+
+        .cost-badge {
+            margin-left: auto;
+            padding: 12px 20px;
+            background: var(--gradient-2);
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 700;
+            color: white;
+            box-shadow: 0 4px 20px var(--success-glow);
+            transition: all 0.2s;
+        }
+
+        .cost-badge:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 30px var(--success-glow);
+        }
+
+        /* Issues Grid */
+        .issues-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+
+        .issues-grid::-webkit-scrollbar { width: 6px; }
+        .issues-grid::-webkit-scrollbar-track { background: transparent; }
+        .issues-grid::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+        .issue-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .issue-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+        }
+
+        .issue-card.critical::before { background: var(--critical); box-shadow: 0 0 20px var(--critical-glow); }
+        .issue-card.warning::before { background: var(--warning); box-shadow: 0 0 20px var(--warning-glow); }
+        .issue-card.info::before { background: var(--info); }
+
+        .issue-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+            border-color: var(--accent);
+        }
+
+        .issue-card.critical:hover { border-color: var(--critical); box-shadow: 0 12px 40px var(--critical-glow); }
+        .issue-card.warning:hover { border-color: var(--warning); box-shadow: 0 12px 40px var(--warning-glow); }
+
+        .issue-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .issue-badge {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 4px 10px;
+            border-radius: 6px;
+        }
+
+        .issue-badge.critical { background: var(--critical); color: white; }
+        .issue-badge.warning { background: var(--warning); color: black; }
+        .issue-badge.info { background: var(--info); color: white; }
+
+        .issue-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .issue-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 32px;
+        }
+
+        .modal {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 80vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            animation: modalIn 0.3s ease-out;
+        }
+
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.95) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .modal-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .modal-header .issue-badge { flex-shrink: 0; }
+
+        .modal-title {
+            flex: 1;
+            font-size: 18px;
+            font-weight: 600;
+            line-height: 1.4;
+        }
+
+        .modal-close {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            color: var(--text);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover { background: var(--card-hover); border-color: var(--critical); }
+
+        .modal-body {
+            padding: 24px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .modal-section {
+            margin-bottom: 24px;
+        }
+
+        .modal-section:last-child { margin-bottom: 0; }
+
+        .modal-section h4 {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        .modal-section p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        .code-block {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .code-header {
+            padding: 12px 16px;
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .code-header span {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+        }
+
+        .copy-btn {
+            padding: 6px 14px;
+            background: var(--accent);
+            border: none;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .copy-btn:hover { background: var(--accent); box-shadow: 0 0 20px var(--accent-glow); }
+
+        .code-content {
+            padding: 16px;
+            font-family: 'JetBrains Mono', 'SF Mono', Monaco, monospace;
+            font-size: 12px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            color: var(--success);
+        }
+
+        /* Export Buttons */
+        .export-row {
+            display: flex;
+            gap: 12px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .export-btn {
+            flex: 1;
+            padding: 14px 20px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .export-btn:hover {
+            background: var(--card-hover);
+            border-color: var(--accent);
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .export-btn svg { width: 18px; height: 18px; }
+
+        /* Cost Breakdown */
+        .cost-breakdown {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .cost-breakdown-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .cost-breakdown-header h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .cost-total {
+            font-size: 18px;
+            font-weight: 700;
+            background: var(--gradient-2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .cost-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 12px;
+        }
+
+        .cost-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: var(--bg);
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+
+        .cost-item-name {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .cost-item-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--success);
+        }
+
+        /* Passed Items in Modal */
+        .passed-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .passed-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            transition: all 0.2s;
+        }
+
+        .passed-item:hover {
+            border-color: var(--success);
+            box-shadow: 0 4px 20px var(--success-glow);
+        }
+
+        .passed-icon {
+            width: 32px;
+            height: 32px;
+            background: rgba(16,185,129,0.15);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .passed-icon svg {
+            width: 18px;
+            height: 18px;
+            color: var(--success);
+        }
+
+        .passed-text {
+            font-size: 14px;
+            color: var(--text);
+            line-height: 1.5;
+        }
+
+        /* SVG Gradients */
+        .svg-defs { position: absolute; width: 0; height: 0; }
+    </style>
+</head>
+<body>
+    <svg class="svg-defs">
+        <defs>
+            <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#10b981"/>
+                <stop offset="50%" stop-color="#6366f1"/>
+                <stop offset="100%" stop-color="#d946ef"/>
+            </linearGradient>
+        </defs>
+    </svg>
+
+    <div class="bg-gradient"></div>
+
+    <div class="app">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                    </svg>
+                </div>
+                <h1>TerraGuard</h1>
+            </div>
+            <div class="header-actions">
+                <button class="theme-btn" onclick="toggleTheme()">
+                    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                    </svg>
+                    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <main>
+            <div class="input-section">
+                <div>
+                    <div class="section-label">Upload Configuration</div>
+                    <div class="upload-area" id="uploadArea">
+                        <input type="file" id="fileInput" accept=".tf,.tf.json">
+                        <div class="upload-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                            </svg>
+                        </div>
+                        <div class="upload-title" id="uploadTitle">Drop your .tf file here</div>
+                        <div class="upload-subtitle">or click to browse</div>
+                    </div>
+                </div>
+
+                <div class="code-area">
+                    <div class="section-label">Or Paste Code</div>
+                    <textarea id="codeInput" placeholder="resource &quot;aws_instance&quot; &quot;web&quot; {
+  ami           = &quot;ami-0c55b159cbfafe1f0&quot;
+  instance_type = &quot;t2.micro&quot;
+}"></textarea>
+                </div>
+
+                <button class="scan-btn" id="scanBtn" onclick="analyze()">
+                    Scan for Vulnerabilities
+                </button>
+            </div>
+
+            <div class="results-section">
+                <div class="empty-state" id="emptyState">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                        <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                    </svg>
+                    <p>Upload a Terraform file or paste code to begin security analysis</p>
+                </div>
+
+                <div class="loading-state" id="loadingState">
+                    <div class="loading-ring"></div>
+                    <div class="loading-text">Analyzing your infrastructure...</div>
+                </div>
+
+                <div class="results-content" id="resultsContent">
+                    <div class="score-card">
+                        <div class="score-ring">
+                            <svg viewBox="0 0 100 100">
+                                <circle class="bg" cx="50" cy="50" r="40"/>
+                                <circle class="progress" id="scoreProgress" cx="50" cy="50" r="40"/>
+                            </svg>
+                            <div class="score-value" id="scoreValue">--</div>
+                        </div>
+                        <div class="score-info">
+                            <h3>Security Score</h3>
+                            <p id="summaryText">Analysis complete</p>
+                        </div>
+                        <div class="score-badges">
+                            <div class="score-badge critical"><span id="criticalCount">0</span> Critical</div>
+                            <div class="score-badge warning"><span id="warningCount">0</span> Warning</div>
+                            <div class="score-badge success" style="cursor:pointer;" onclick="showPassed()"><span id="passedCount">0</span> Passed</div>
+                        </div>
+                        <div class="cost-badge" id="costBadge" style="display:none;cursor:pointer;" onclick="showCostBreakdown()"></div>
+                    </div>
+
+                    <!-- Cost Breakdown Panel -->
+                    <div class="cost-breakdown" id="costBreakdown" style="display:none;">
+                        <div class="cost-breakdown-header">
+                            <h3>Cost Breakdown</h3>
+                            <span class="cost-total" id="costTotal"></span>
+                        </div>
+                        <div class="cost-items" id="costItems"></div>
+                    </div>
+
+                    <div class="issues-grid" id="issuesGrid"></div>
+
+                    <div class="export-row">
+                        <button class="export-btn" onclick="downloadJSON()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M12 18v-6M9 15l3 3 3-3"/>
+                            </svg>
+                            Export JSON
+                        </button>
+                        <button class="export-btn" onclick="downloadPDF()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M12 18v-6M9 15l3 3 3-3"/>
+                            </svg>
+                            Download PDF
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="issue-badge" id="modalBadge"></span>
+                <div class="modal-title" id="modalTitle"></div>
+                <button class="modal-close" onclick="closeModal()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-section">
+                    <h4>Description</h4>
+                    <p id="modalDesc"></p>
+                </div>
+                <div class="modal-section" id="modalResourceSection" style="display:none;">
+                    <h4>Affected Resource</h4>
+                    <p id="modalResource" style="font-family:monospace;color:var(--accent);"></p>
+                </div>
+                <div class="modal-section" id="modalFixSection" style="display:none;">
+                    <h4>Recommended Fix</h4>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span>Terraform</span>
+                            <button class="copy-btn" onclick="copyFix()">Copy Code</button>
+                        </div>
+                        <pre class="code-content" id="modalFix"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API = 'http://localhost:8000';
+        let review = null, fileContent = null, selectedFile = null, currentIssue = null;
+
+        const $ = id => document.getElementById(id);
+
+        // Theme
+        function toggleTheme() {
+            document.documentElement.classList.toggle('light');
+            localStorage.setItem('theme', document.documentElement.classList.contains('light') ? 'light' : 'dark');
+        }
+        if (localStorage.getItem('theme') === 'light') document.documentElement.classList.add('light');
+
+        // File handling
+        $('uploadArea').onclick = () => $('fileInput').click();
+        $('uploadArea').ondragover = e => e.preventDefault();
+        $('uploadArea').ondrop = e => {
+            e.preventDefault();
+            const f = e.dataTransfer.files[0];
+            if (f?.name.match(/\.tf(\.json)?$/)) setFile(f);
+        };
+        $('fileInput').onchange = e => { if (e.target.files[0]) setFile(e.target.files[0]); };
+
+        function setFile(f) {
+            selectedFile = f;
+            $('uploadArea').classList.add('has-file');
+            $('uploadTitle').textContent = f.name;
+            $('codeInput').value = '';
+        }
+
+        async function analyze() {
+            const code = $('codeInput').value.trim();
+            let content, filename = 'config.tf';
+
+            if (selectedFile) {
+                content = selectedFile;
+                filename = selectedFile.name;
+                fileContent = await selectedFile.text();
+            } else if (code) {
+                content = new Blob([code], {type: 'text/plain'});
+                fileContent = code;
+            } else return;
+
+            $('emptyState').style.display = 'none';
+            $('loadingState').style.display = 'flex';
+            $('resultsContent').style.display = 'none';
+            $('scanBtn').disabled = true;
+
+            try {
+                const fd = new FormData();
+                fd.append('file', content, filename);
+                const res = await fetch(`${API}/review`, {method: 'POST', body: fd});
+                if (!res.ok) throw new Error((await res.json()).detail || 'Failed');
+                review = await res.json();
+                showResults();
+            } catch (e) {
+                alert(e.message);
+                $('emptyState').style.display = 'flex';
+            } finally {
+                $('loadingState').style.display = 'none';
+                $('scanBtn').disabled = false;
+            }
+        }
+
+        function showResults() {
+            const r = review.review;
+            $('resultsContent').style.display = 'flex';
+
+            // Animate score
+            const score = r.overall_score;
+            $('scoreValue').textContent = score;
+            const circumference = 251;
+            const offset = circumference - (score / 100) * circumference;
+            setTimeout(() => {
+                $('scoreProgress').style.strokeDashoffset = offset;
+            }, 100);
+
+            // Counts
+            $('criticalCount').textContent = r.issues.filter(i => i.severity === 'critical').length;
+            $('warningCount').textContent = r.issues.filter(i => i.severity === 'warning').length;
+            $('passedCount').textContent = r.positives.length;
+
+            // Summary
+            $('summaryText').textContent = r.summary;
+
+            // Cost
+            if (r.cost_estimate?.monthly_total > 0) {
+                $('costBadge').style.display = 'block';
+                $('costBadge').textContent = `$${r.cost_estimate.monthly_total.toFixed(0)}/mo`;
+                renderCostBreakdown(r.cost_estimate);
+            } else {
+                $('costBreakdown').style.display = 'none';
+            }
+
+            // Issues
+            $('issuesGrid').innerHTML = r.issues.map((issue, i) => `
+                <div class="issue-card ${issue.severity}" onclick="showIssue(${i})">
+                    <div class="issue-header">
+                        <span class="issue-badge ${issue.severity}">${issue.severity}</span>
+                    </div>
+                    <div class="issue-title">${esc(issue.title)}</div>
+                    <div class="issue-desc">${esc(issue.description)}</div>
+                </div>
+            `).join('') || '<p style="color:var(--success);grid-column:1/-1;text-align:center;padding:40px;">No security issues found!</p>';
+        }
+
+        function showIssue(i) {
+            currentIssue = i;
+            const issue = review.review.issues[i];
+
+            $('modalBadge').className = `issue-badge ${issue.severity}`;
+            $('modalBadge').textContent = issue.severity;
+            $('modalTitle').textContent = issue.title;
+            $('modalDesc').textContent = issue.description;
+
+            if (issue.resource) {
+                $('modalResourceSection').style.display = 'block';
+                $('modalResource').textContent = issue.resource;
+            } else {
+                $('modalResourceSection').style.display = 'none';
+            }
+
+            if (issue.fix_code) {
+                $('modalFixSection').style.display = 'block';
+                $('modalFix').textContent = issue.fix_code;
+            } else {
+                $('modalFixSection').style.display = 'none';
+            }
+
+            $('modal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            $('modal').style.display = 'none';
+            currentIssue = null;
+        }
+
+        function copyFix() {
+            if (currentIssue === null) return;
+            navigator.clipboard.writeText(review.review.issues[currentIssue].fix_code);
+        }
+
+        function esc(s) {
+            const d = document.createElement('div');
+            d.textContent = s;
+            return d.innerHTML;
+        }
+
+        function downloadJSON() {
+            if (!review) return;
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([JSON.stringify(review, null, 2)], {type: 'application/json'}));
+            a.download = `terraguard-report.json`;
+            a.click();
+        }
+
+        async function downloadPDF() {
+            if (!fileContent) return;
+            try {
+                const fd = new FormData();
+                fd.append('file', new Blob([fileContent]), review.filename);
+                const res = await fetch(`${API}/review/pdf`, {method: 'POST', body: fd});
+                if (!res.ok) throw new Error('Failed');
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(await res.blob());
+                a.download = `terraguard-report.pdf`;
+                a.click();
+            } catch (e) {
+                alert('PDF generation failed');
+            }
+        }
+
+        function showPassed() {
+            if (!review?.review?.positives?.length) return;
+
+            $('modalBadge').className = 'issue-badge success';
+            $('modalBadge').textContent = 'passed';
+            $('modalTitle').textContent = `${review.review.positives.length} Security Checks Passed`;
+
+            const passedHtml = review.review.positives.map(p => `
+                <div class="passed-item">
+                    <div class="passed-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 12l2 2 4-4"/>
+                            <circle cx="12" cy="12" r="10"/>
+                        </svg>
+                    </div>
+                    <div class="passed-text">${esc(p)}</div>
+                </div>
+            `).join('');
+
+            $('modalDesc').innerHTML = `<div class="passed-list">${passedHtml}</div>`;
+            $('modalResourceSection').style.display = 'none';
+            $('modalFixSection').style.display = 'none';
+            $('modal').style.display = 'flex';
+        }
+
+        function showCostBreakdown() {
+            const panel = $('costBreakdown');
+            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function renderCostBreakdown(costEstimate) {
+            if (!costEstimate || costEstimate.monthly_total <= 0) {
+                $('costBreakdown').style.display = 'none';
+                return;
+            }
+
+            $('costTotal').textContent = `$${costEstimate.monthly_total.toFixed(2)}/mo`;
+
+            // breakdown is a dict like {"EC2: web": 50.00, "RDS: db": 100.00}
+            const breakdown = costEstimate.breakdown || {};
+            const entries = Object.entries(breakdown);
+
+            if (entries.length === 0) {
+                $('costBreakdown').style.display = 'none';
+                return;
+            }
+
+            $('costItems').innerHTML = entries.map(([resource, monthly]) => `
+                <div class="cost-item">
+                    <span class="cost-item-name">${esc(resource)}</span>
+                    <span class="cost-item-value">$${monthly.toFixed(2)}</span>
+                </div>
+            `).join('');
+
+            // Show panel by default when there's cost data
+            $('costBreakdown').style.display = 'block';
+        }
+
+        // Keyboard
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') closeModal();
+        });
+    </script>
+</body>
+</html>
