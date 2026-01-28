@@ -1,143 +1,125 @@
-# TerraGuard - Infrastructure Security Scanner
+# TerraGuard
 
-AI-powered security review for infrastructure-as-code configurations.
+**AI-powered security scanner for infrastructure-as-code**
 
-![TerraGuard Screenshot](screenshot-1.png)
-![TerraGuard Screenshot](screenshot-2.png)
+Scan your Terraform, CloudFormation, Kubernetes, Dockerfiles, and Helm charts for security vulnerabilities, misconfigurations, and hardcoded secrets.
 
-## Supported Formats
+<p align="center">
+  <img src="screenshot-1.png" alt="TerraGuard Security Analysis" width="800">
+</p>
 
-- **Terraform** (.tf, .tf.json)
-- **CloudFormation** (.yaml, .yml, .json, .template)
-- **Kubernetes** (.yaml, .yml)
-- **Dockerfile**
-- **Helm Charts** (.yaml, .tpl)
+<p align="center">
+  <img src="screenshot-2.png" alt="TerraGuard Results" width="800">
+</p>
+
+---
 
 ## Features
 
 - **Multi-Provider AI** - Choose from Anthropic, OpenAI, Google, or Groq
-- **Secrets Detection** - Finds hardcoded passwords, API keys, tokens
-- **Security Analysis** - Open ports, missing encryption, IAM issues
-- **Cost Estimation** - AWS resource cost breakdown (Terraform/CloudFormation)
+- **Secrets Detection** - Finds hardcoded passwords, API keys, and tokens
+- **Security Analysis** - Detects open ports, missing encryption, IAM issues
+- **Cost Estimation** - AWS resource cost breakdown for Terraform/CloudFormation
 - **PDF Reports** - Export detailed security reports
 - **Modern UI** - Dark/light themes with glassmorphism design
 
-## Supported AI Providers & Models
+## Supported Formats
 
-| Provider | Model | Speed | Cost |
-|----------|-------|-------|------|
-| **Anthropic** | Claude Sonnet 4 | Fast | $3/1M tokens |
-| | Claude 3.5 Haiku | Very Fast | $0.25/1M tokens |
-| **OpenAI** | GPT-4o | Fast | $2.50/1M tokens |
-| | GPT-4o Mini | Very Fast | $0.15/1M tokens |
-| **Google** | Gemini 1.5 Pro | Fast | $1.25/1M tokens |
-| | Gemini 1.5 Flash | Very Fast | $0.075/1M tokens |
-| **Groq** | Llama 3.3 70B | Blazing Fast | Free tier! |
-| | Llama 3.1 8B | Ultra Fast | Free tier! |
+| Format | Extensions | Example Checks |
+|--------|------------|----------------|
+| Terraform | `.tf`, `.tf.json` | Open security groups, public S3, missing encryption |
+| CloudFormation | `.yaml`, `.json`, `.template` | DeletionPolicy, parameter validation |
+| Kubernetes | `.yaml`, `.yml` | Privileged containers, root user, missing limits |
+| Dockerfile | `Dockerfile` | Root user, latest tags, hardcoded secrets |
+| Helm | `.yaml`, `.tpl` | Hardcoded values, missing defaults |
+
+## AI Providers
+
+| Provider | Models | Speed | Cost |
+|----------|--------|-------|------|
+| Anthropic | Claude Sonnet 4, Claude 3.5 Haiku | Fast | From $0.25/1M tokens |
+| OpenAI | GPT-4o, GPT-4o Mini | Fast | From $0.15/1M tokens |
+| Google | Gemini 1.5 Pro, Gemini 1.5 Flash | Fast | From $0.075/1M tokens |
+| Groq | Llama 3.3 70B, Llama 3.1 8B | Blazing Fast | **Free tier!** |
+
+---
 
 ## Quick Start
 
-### 1. Clone & Setup
+### 1. Setup
 
 ```bash
-git clone https://github.com/YourUsername/terraguard.git
+git clone https://github.com/XionDot/terraguard.git
 cd terraguard
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 2. Configure API Key (Choose One)
+### 2. Configure API Key
 
-**Option A: Environment Variable (Recommended for personal use)**
+**Option A: Environment Variable**
 ```bash
 cp .env.example .env
-# Edit .env and add your API key(s):
-# ANTHROPIC_API_KEY=sk-ant-api03-...
+# Add your key(s) to .env:
+# ANTHROPIC_API_KEY=sk-ant-...
 # OPENAI_API_KEY=sk-...
 # GOOGLE_API_KEY=AIza...
 # GROQ_API_KEY=gsk_...
 ```
 
-**Option B: Enter in Browser (Recommended for sharing)**
-- Skip the .env setup
-- When you open the app, choose your AI provider and enter your API key
-- Optionally save it in your browser's local storage
+**Option B: Enter in Browser**
+Skip `.env` setup - enter your API key directly in the app.
 
 **Get API Keys:**
-- Anthropic: https://console.anthropic.com/settings/keys
-- OpenAI: https://platform.openai.com/api-keys
-- Google: https://aistudio.google.com/app/apikey
-- Groq: https://console.groq.com/keys (Free tier available!)
+- [Anthropic Console](https://console.anthropic.com/settings/keys)
+- [OpenAI Platform](https://platform.openai.com/api-keys)
+- [Google AI Studio](https://aistudio.google.com/app/apikey)
+- [Groq Console](https://console.groq.com/keys) (Free!)
 
-### 3. Run Backend
-
-```bash
-cd backend
-uvicorn main:app --reload --port 8000
-```
-
-### 4. Run Frontend
+### 3. Run
 
 ```bash
-cd frontend
-python -m http.server 3000
+# Terminal 1: Backend
+cd backend && uvicorn main:app --reload --port 8000
+
+# Terminal 2: Frontend
+cd frontend && python -m http.server 3000
 ```
 
-Open http://localhost:3000
+Open **http://localhost:3000**
+
+---
 
 ## API Usage
 
-All endpoints accept optional headers:
-- `X-API-Key` - Your API key (not required if env var is set)
-- `X-Provider` - AI provider: `anthropic`, `openai`, `google`, or `groq` (default: `anthropic`)
-- `X-Model` - Model to use (optional, uses provider's default)
-
-### POST /review
-Upload a config file for security review.
-
 ```bash
-# Using Anthropic (default)
-curl -X POST "http://localhost:8000/review" -F "file=@main.tf"
+# Basic scan
+curl -X POST http://localhost:8000/review -F "file=@main.tf"
 
-# Using OpenAI GPT-4o
-curl -X POST "http://localhost:8000/review" \
-  -H "X-API-Key: sk-..." \
-  -H "X-Provider: openai" \
-  -H "X-Model: gpt-4o" \
-  -F "file=@main.tf"
-
-# Using Groq (free!)
-curl -X POST "http://localhost:8000/review" \
-  -H "X-API-Key: gsk_..." \
+# With specific provider
+curl -X POST http://localhost:8000/review \
   -H "X-Provider: groq" \
+  -H "X-API-Key: gsk_..." \
   -F "file=@main.tf"
-```
 
-### POST /review/pdf
-Generate a PDF report.
-
-```bash
-curl -X POST "http://localhost:8000/review/pdf" \
-  -H "X-Provider: anthropic" \
+# Generate PDF report
+curl -X POST http://localhost:8000/review/pdf \
   -F "file=@main.tf" -o report.pdf
 ```
 
-## What It Detects
+**Headers:**
+- `X-API-Key` - Your API key (optional if set in `.env`)
+- `X-Provider` - `anthropic`, `openai`, `google`, or `groq`
+- `X-Model` - Specific model (optional)
 
-| Format | Security Checks |
-|--------|-----------------|
-| Terraform | Open security groups, public S3, missing encryption, IAM issues |
-| CloudFormation | Same as Terraform + DeletionPolicy, Parameter validation |
-| Kubernetes | Privileged containers, root user, missing limits, hostNetwork |
-| Dockerfile | Root user, latest tags, hardcoded secrets, unnecessary packages |
-| Helm | Hardcoded values, missing defaults, template security |
+---
 
 ## Tech Stack
 
 - **Backend**: FastAPI + Python
 - **Frontend**: Vanilla HTML/CSS/JS
-- **AI**: Anthropic, OpenAI, Google, Groq (multi-provider)
+- **AI**: Multi-provider (Anthropic, OpenAI, Google, Groq)
 
 ## License
 
