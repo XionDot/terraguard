@@ -30,3 +30,11 @@ htmlcov/
 dist/
 build/
 *.egg-info/
+
+# Backups
+*.backup
+
+# Media
+*.mp4
+*.mov
+*.avi

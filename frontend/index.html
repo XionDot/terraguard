@@ -814,11 +814,361 @@
             line-height: 1.5;
         }
 
+        /* Config Type Badge */
+        .config-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--accent);
+            margin-bottom: 12px;
+        }
+
+        .config-badge svg {
+            width: 14px;
+            height: 14px;
+        }
+
         /* SVG Gradients */
         .svg-defs { position: absolute; width: 0; height: 0; }
+
+        /* API Key Screen */
+        .api-key-screen {
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 32px;
+        }
+
+        .api-key-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 48px;
+            max-width: 480px;
+            width: 100%;
+            text-align: center;
+            animation: modalIn 0.4s ease-out;
+        }
+
+        .api-key-logo {
+            width: 72px;
+            height: 72px;
+            background: var(--gradient-1);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            box-shadow: 0 8px 32px var(--accent-glow);
+        }
+
+        .api-key-logo svg { width: 40px; height: 40px; color: white; }
+
+        .api-key-card h2 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .api-key-card .subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+            line-height: 1.6;
+        }
+
+        .api-key-input-wrapper {
+            position: relative;
+            margin-bottom: 16px;
+        }
+
+        .api-key-input {
+            width: 100%;
+            padding: 16px 20px;
+            background: var(--bg);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-size: 14px;
+            color: var(--text);
+            font-family: 'JetBrains Mono', monospace;
+            transition: all 0.2s;
+        }
+
+        .api-key-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px var(--accent-glow);
+        }
+
+        .api-key-input::placeholder { color: var(--text-secondary); }
+
+        .api-key-submit {
+            width: 100%;
+            padding: 16px 32px;
+            background: var(--gradient-1);
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 24px var(--accent-glow);
+            margin-bottom: 16px;
+        }
+
+        .api-key-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px var(--accent-glow);
+        }
+
+        .api-key-submit:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .api-key-error {
+            color: var(--critical);
+            font-size: 13px;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .api-key-link {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .api-key-link a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .api-key-link a:hover { text-decoration: underline; }
+
+        .api-key-remember {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 24px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .api-key-remember input {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--accent);
+        }
+
+        /* Provider Selector */
+        .provider-section {
+            margin-bottom: 24px;
+        }
+
+        .provider-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .provider-tab {
+            padding: 10px 16px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .provider-tab:hover {
+            background: var(--card-hover);
+            border-color: var(--accent);
+        }
+
+        .provider-tab.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+            box-shadow: 0 4px 16px var(--accent-glow);
+        }
+
+        .provider-tab .provider-icon {
+            width: 18px;
+            height: 18px;
+        }
+
+        .provider-tab.configured::after {
+            content: '✓';
+            font-size: 10px;
+            background: var(--success);
+            color: white;
+            padding: 2px 4px;
+            border-radius: 4px;
+            margin-left: 4px;
+        }
+
+        .model-selector {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .model-select {
+            flex: 1;
+            padding: 12px 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 13px;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.2s;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23a1a1aa' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 36px;
+        }
+
+        .model-select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .model-select option {
+            background: var(--bg-secondary);
+            color: var(--text);
+        }
+
+        .model-info {
+            font-size: 11px;
+            color: var(--text-secondary);
+            display: flex;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .model-info span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .model-info .speed { color: var(--success); }
+        .model-info .cost { color: var(--warning); }
+
+        /* API Key screen - provider tabs */
+        .api-key-providers {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .api-key-provider-tab {
+            padding: 8px 14px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .api-key-provider-tab:hover {
+            background: var(--card-hover);
+            border-color: var(--accent);
+        }
+
+        .api-key-provider-tab.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+
+        .api-key-help {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 16px;
+            padding: 12px;
+            background: var(--card);
+            border-radius: 8px;
+            text-align: left;
+        }
+
+        .api-key-help a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .api-key-help a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
+    <!-- API Key Screen -->
+    <div class="api-key-screen" id="apiKeyScreen" style="display:none;">
+        <div class="bg-gradient"></div>
+        <div class="api-key-card">
+            <div class="api-key-logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                </svg>
+            </div>
+            <h2>Welcome to TerraGuard</h2>
+            <p class="subtitle">
+                Choose your AI provider and enter your API key to start scanning.
+            </p>
+            <div class="api-key-providers" id="apiKeyProviders">
+                <button class="api-key-provider-tab active" data-provider="anthropic">Anthropic</button>
+                <button class="api-key-provider-tab" data-provider="openai">OpenAI</button>
+                <button class="api-key-provider-tab" data-provider="google">Google</button>
+                <button class="api-key-provider-tab" data-provider="groq">Groq</button>
+            </div>
+            <div class="api-key-input-wrapper">
+                <input type="password" class="api-key-input" id="apiKeyInput" placeholder="sk-ant-api03-..." autocomplete="off">
+            </div>
+            <div class="api-key-error" id="apiKeyError"></div>
+            <div class="api-key-remember">
+                <input type="checkbox" id="rememberKey" checked>
+                <label for="rememberKey">Remember my API key</label>
+            </div>
+            <button class="api-key-submit" id="apiKeySubmit" onclick="submitApiKey()">
+                Start Scanning
+            </button>
+            <div class="api-key-help" id="apiKeyHelp">
+                <strong>Anthropic:</strong> Get your key at <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com</a>
+            </div>
+        </div>
+    </div>
+
     <svg class="svg-defs">
         <defs>
             <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -855,17 +1205,46 @@
 
         <main>
             <div class="input-section">
+                <!-- Provider/Model Selector -->
+                <div class="provider-section">
+                    <div class="section-label">AI Provider</div>
+                    <div class="provider-tabs" id="providerTabs">
+                        <button class="provider-tab active" data-provider="anthropic">
+                            <span class="provider-icon">🤖</span> Anthropic
+                        </button>
+                        <button class="provider-tab" data-provider="openai">
+                            <span class="provider-icon">🧠</span> OpenAI
+                        </button>
+                        <button class="provider-tab" data-provider="google">
+                            <span class="provider-icon">✨</span> Google
+                        </button>
+                        <button class="provider-tab" data-provider="groq">
+                            <span class="provider-icon">⚡</span> Groq
+                        </button>
+                    </div>
+                    <div class="model-selector">
+                        <select class="model-select" id="modelSelect">
+                            <option value="claude-sonnet-4-20250514">Claude Sonnet 4</option>
+                            <option value="claude-3-5-haiku-20241022">Claude 3.5 Haiku</option>
+                        </select>
+                    </div>
+                    <div class="model-info" id="modelInfo">
+                        <span class="speed">⚡ Fast</span>
+                        <span class="cost">💰 $3/1M tokens</span>
+                    </div>
+                </div>
+
                 <div>
                     <div class="section-label">Upload Configuration</div>
                     <div class="upload-area" id="uploadArea">
-                        <input type="file" id="fileInput" accept=".tf,.tf.json">
+                        <input type="file" id="fileInput" accept=".tf,.tf.json,.yaml,.yml,.json,.template,.tpl,Dockerfile,.dockerfile">
                         <div class="upload-icon">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
                             </svg>
                         </div>
-                        <div class="upload-title" id="uploadTitle">Drop your .tf file here</div>
-                        <div class="upload-subtitle">or click to browse</div>
+                        <div class="upload-title" id="uploadTitle">Drop your config file here</div>
+                        <div class="upload-subtitle">Terraform, CloudFormation, K8s, Dockerfile, Helm</div>
                     </div>
                 </div>
 
@@ -896,6 +1275,13 @@
                 </div>
 
                 <div class="results-content" id="resultsContent">
+                    <div class="config-badge" id="configBadge" style="display:none;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                            <path d="M14 2v6h6"/>
+                        </svg>
+                        <span id="configType">Terraform</span>
+                    </div>
                     <div class="score-card">
                         <div class="score-ring">
                             <svg viewBox="0 0 100 100">
@@ -911,6 +1297,7 @@
                         <div class="score-badges">
                             <div class="score-badge critical"><span id="criticalCount">0</span> Critical</div>
                             <div class="score-badge warning"><span id="warningCount">0</span> Warning</div>
+                            <div class="score-badge info"><span id="infoCount">0</span> Info</div>
                             <div class="score-badge success" style="cursor:pointer;" onclick="showPassed()"><span id="passedCount">0</span> Passed</div>
                         </div>
                         <div class="cost-badge" id="costBadge" style="display:none;cursor:pointer;" onclick="showCostBreakdown()"></div>
@@ -985,6 +1372,280 @@
         const API = 'http://localhost:8000';
         let review = null, fileContent = null, selectedFile = null, currentIssue = null;
 
+        // Multi-provider state
+        let providers = {};  // Loaded from backend
+        let selectedProvider = 'anthropic';
+        let selectedModel = null;
+        let apiKeys = {};  // Per-provider API keys from localStorage
+        let configuredProviders = {};  // Providers with env vars set
+
+        // Provider help links
+        const PROVIDER_LINKS = {
+            anthropic: { name: 'Anthropic', url: 'https://console.anthropic.com/settings/keys', placeholder: 'sk-ant-api03-...' },
+            openai: { name: 'OpenAI', url: 'https://platform.openai.com/api-keys', placeholder: 'sk-...' },
+            google: { name: 'Google', url: 'https://aistudio.google.com/app/apikey', placeholder: 'AIza...' },
+            groq: { name: 'Groq', url: 'https://console.groq.com/keys', placeholder: 'gsk_...' }
+        };
+
+        // Initialize - load provider info and check API keys
+        async function init() {
+            try {
+                const res = await fetch(API);
+                const data = await res.json();
+                providers = data.providers || {};
+
+                // Track which providers have env vars configured
+                for (const [pid, pdata] of Object.entries(providers)) {
+                    configuredProviders[pid] = pdata.configured;
+                }
+
+                // Load saved API keys from localStorage
+                const saved = localStorage.getItem('terraguard_api_keys');
+                if (saved) {
+                    try { apiKeys = JSON.parse(saved); } catch (e) { apiKeys = {}; }
+                }
+
+                // Check if any provider is ready to use
+                const hasConfiguredProvider = Object.values(configuredProviders).some(v => v);
+                const hasSavedKey = Object.keys(apiKeys).length > 0;
+
+                if (hasConfiguredProvider || hasSavedKey) {
+                    // Auto-select first available provider
+                    if (hasConfiguredProvider) {
+                        selectedProvider = Object.entries(configuredProviders).find(([k, v]) => v)?.[0] || 'anthropic';
+                    } else if (hasSavedKey) {
+                        selectedProvider = Object.keys(apiKeys)[0];
+                    }
+                    $('apiKeyScreen').style.display = 'none';
+                } else {
+                    $('apiKeyScreen').style.display = 'flex';
+                }
+
+                // Initialize UI
+                updateProviderTabs();
+                updateModelSelect();
+                setupApiKeyProviderTabs();
+
+            } catch (e) {
+                console.error('Init error:', e);
+                // Backend not running - check localStorage
+                const saved = localStorage.getItem('terraguard_api_keys');
+                if (saved) {
+                    try { apiKeys = JSON.parse(saved); } catch (e) { apiKeys = {}; }
+                }
+                if (Object.keys(apiKeys).length > 0) {
+                    selectedProvider = Object.keys(apiKeys)[0];
+                    $('apiKeyScreen').style.display = 'none';
+                } else {
+                    $('apiKeyScreen').style.display = 'flex';
+                }
+                setupApiKeyProviderTabs();
+            }
+        }
+
+        function setupApiKeyProviderTabs() {
+            // API key screen provider tabs
+            document.querySelectorAll('.api-key-provider-tab').forEach(tab => {
+                tab.onclick = () => {
+                    document.querySelectorAll('.api-key-provider-tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    const provider = tab.dataset.provider;
+                    updateApiKeyHelp(provider);
+                    // Clear input and error when switching providers
+                    $('apiKeyInput').value = '';
+                    $('apiKeyError').style.display = 'none';
+                };
+            });
+            updateApiKeyHelp('anthropic');
+        }
+
+        function showApiKeyScreen(provider) {
+            // Clear previous input and errors
+            $('apiKeyInput').value = '';
+            $('apiKeyError').style.display = 'none';
+            // Select the right provider tab
+            document.querySelectorAll('.api-key-provider-tab').forEach(t => {
+                t.classList.toggle('active', t.dataset.provider === provider);
+            });
+            updateApiKeyHelp(provider);
+            $('apiKeyScreen').style.display = 'flex';
+        }
+
+        function updateApiKeyHelp(provider) {
+            const info = PROVIDER_LINKS[provider];
+            $('apiKeyInput').placeholder = info.placeholder;
+            $('apiKeyHelp').innerHTML = `<strong>${info.name}:</strong> Get your key at <a href="${info.url}" target="_blank">${info.url.replace('https://', '')}</a>`;
+        }
+
+        // Key format validation per provider
+        const KEY_FORMATS = {
+            anthropic: { prefix: 'sk-ant-', name: 'Anthropic', example: 'sk-ant-api03-...' },
+            openai: { prefix: 'sk-', exclude: 'sk-ant-', name: 'OpenAI', example: 'sk-proj-...' },
+            google: { prefix: 'AIza', name: 'Google', example: 'AIza...' },
+            groq: { prefix: 'gsk_', name: 'Groq', example: 'gsk_...' }
+        };
+
+        function validateKeyFormat(key, provider) {
+            const format = KEY_FORMATS[provider];
+            if (!format) return true;
+
+            // OpenAI keys start with sk- but NOT sk-ant-
+            if (provider === 'openai') {
+                return key.startsWith(format.prefix) && !key.startsWith(format.exclude);
+            }
+
+            return key.startsWith(format.prefix);
+        }
+
+        function submitApiKey() {
+            const input = $('apiKeyInput').value.trim();
+            const error = $('apiKeyError');
+            const activeTab = document.querySelector('.api-key-provider-tab.active');
+            const provider = activeTab?.dataset.provider || 'anthropic';
+
+            if (!input) {
+                error.textContent = 'Please enter an API key';
+                error.style.display = 'block';
+                return;
+            }
+
+            // Validate key format matches provider
+            if (!validateKeyFormat(input, provider)) {
+                const format = KEY_FORMATS[provider];
+                error.textContent = `Invalid ${format.name} key format. Keys should start with "${format.prefix}" (e.g., ${format.example})`;
+                error.style.display = 'block';
+                return;
+            }
+
+            // Store the key
+            apiKeys[provider] = input;
+            selectedProvider = provider;
+
+            // Save to localStorage if checkbox is checked
+            if ($('rememberKey').checked) {
+                localStorage.setItem('terraguard_api_keys', JSON.stringify(apiKeys));
+            }
+
+            $('apiKeyScreen').style.display = 'none';
+            error.style.display = 'none';
+
+            // Update main UI
+            updateProviderTabs();
+            updateModelSelect();
+        }
+
+        function updateProviderTabs() {
+            document.querySelectorAll('#providerTabs .provider-tab').forEach(tab => {
+                const pid = tab.dataset.provider;
+                tab.classList.toggle('active', pid === selectedProvider);
+                tab.classList.toggle('configured', configuredProviders[pid] || apiKeys[pid]);
+            });
+        }
+
+        function updateModelSelect() {
+            const select = $('modelSelect');
+            const providerData = providers[selectedProvider];
+
+            if (!providerData) {
+                // Fallback if providers not loaded
+                const fallbackModels = {
+                    anthropic: [
+                        { id: 'claude-sonnet-4-20250514', name: 'Claude Sonnet 4', speed: 'Fast', cost: '$3/1M tokens' },
+                        { id: 'claude-3-5-haiku-20241022', name: 'Claude 3.5 Haiku', speed: 'Very Fast', cost: '$0.25/1M tokens' }
+                    ],
+                    openai: [
+                        { id: 'gpt-4o', name: 'GPT-4o', speed: 'Fast', cost: '$2.50/1M tokens' },
+                        { id: 'gpt-4o-mini', name: 'GPT-4o Mini', speed: 'Very Fast', cost: '$0.15/1M tokens' }
+                    ],
+                    google: [
+                        { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro', speed: 'Fast', cost: '$1.25/1M tokens' },
+                        { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', speed: 'Very Fast', cost: '$0.075/1M tokens' }
+                    ],
+                    groq: [
+                        { id: 'llama-3.3-70b-versatile', name: 'Llama 3.3 70B', speed: 'Blazing Fast', cost: 'Free tier!' },
+                        { id: 'llama-3.1-8b-instant', name: 'Llama 3.1 8B', speed: 'Ultra Fast', cost: 'Free tier!' }
+                    ]
+                };
+                const models = fallbackModels[selectedProvider] || fallbackModels.anthropic;
+                select.innerHTML = models.map(m =>
+                    `<option value="${m.id}" data-speed="${m.speed}" data-cost="${m.cost}">${m.name}</option>`
+                ).join('');
+                selectedModel = models[0].id;
+                updateModelInfo(models[0].speed, models[0].cost);
+                return;
+            }
+
+            // Build options from backend data
+            select.innerHTML = Object.entries(providerData.models).map(([id, info]) =>
+                `<option value="${id}" data-speed="${info.speed}" data-cost="${info.cost}">${info.name}</option>`
+            ).join('');
+
+            selectedModel = providerData.default_model;
+            select.value = selectedModel;
+
+            // Update model info
+            const modelInfo = providerData.models[selectedModel];
+            if (modelInfo) {
+                updateModelInfo(modelInfo.speed, modelInfo.cost);
+            }
+        }
+
+        function updateModelInfo(speed, cost) {
+            $('modelInfo').innerHTML = `
+                <span class="speed">⚡ ${speed}</span>
+                <span class="cost">💰 ${cost}</span>
+            `;
+        }
+
+        // Handle provider tab clicks
+        document.addEventListener('DOMContentLoaded', () => {
+            init();
+
+            // Main provider tabs
+            document.querySelectorAll('#providerTabs .provider-tab').forEach(tab => {
+                tab.onclick = () => {
+                    const provider = tab.dataset.provider;
+
+                    // Check if we have access to this provider
+                    if (!configuredProviders[provider] && !apiKeys[provider]) {
+                        // Need API key - show the key screen with this provider selected
+                        showApiKeyScreen(provider);
+                        return;
+                    }
+
+                    selectedProvider = provider;
+                    updateProviderTabs();
+                    updateModelSelect();
+                };
+            });
+
+            // Model select change
+            $('modelSelect').onchange = (e) => {
+                selectedModel = e.target.value;
+                const opt = e.target.selectedOptions[0];
+                updateModelInfo(opt.dataset.speed, opt.dataset.cost);
+            };
+
+            // API key input enter
+            $('apiKeyInput').addEventListener('keypress', e => {
+                if (e.key === 'Enter') submitApiKey();
+            });
+        });
+
+        function getHeaders() {
+            const headers = {
+                'X-Provider': selectedProvider,
+                'X-Model': selectedModel || ''
+            };
+
+            // Add API key if we have one and provider isn't configured in env
+            if (!configuredProviders[selectedProvider] && apiKeys[selectedProvider]) {
+                headers['X-API-Key'] = apiKeys[selectedProvider];
+            }
+
+            return headers;
+        }
+
         const $ = id => document.getElementById(id);
 
         // Theme
@@ -995,12 +1656,15 @@
         if (localStorage.getItem('theme') === 'light') document.documentElement.classList.add('light');
 
         // File handling
+        const SUPPORTED_EXTENSIONS = /\.(tf|tf\.json|yaml|yml|json|template|tpl|dockerfile)$/i;
+        const isDockerfile = f => f.name.toLowerCase().includes('dockerfile');
+
         $('uploadArea').onclick = () => $('fileInput').click();
         $('uploadArea').ondragover = e => e.preventDefault();
         $('uploadArea').ondrop = e => {
             e.preventDefault();
             const f = e.dataTransfer.files[0];
-            if (f?.name.match(/\.tf(\.json)?$/)) setFile(f);
+            if (f && (f.name.match(SUPPORTED_EXTENSIONS) || isDockerfile(f))) setFile(f);
         };
         $('fileInput').onchange = e => { if (e.target.files[0]) setFile(e.target.files[0]); };
 
@@ -1032,12 +1696,31 @@
             try {
                 const fd = new FormData();
                 fd.append('file', content, filename);
-                const res = await fetch(`${API}/review`, {method: 'POST', body: fd});
-                if (!res.ok) throw new Error((await res.json()).detail || 'Failed');
+                const res = await fetch(`${API}/review`, {
+                    method: 'POST',
+                    body: fd,
+                    headers: getHeaders()
+                });
+                if (!res.ok) {
+                    const err = await res.json();
+                    // If API key error, show the key screen again
+                    if (res.status === 401) {
+                        // Remove the bad key for this provider
+                        delete apiKeys[selectedProvider];
+                        localStorage.setItem('terraguard_api_keys', JSON.stringify(apiKeys));
+
+                        showApiKeyScreen(selectedProvider);
+                        // Show the error message
+                        $('apiKeyError').textContent = err.detail;
+                        $('apiKeyError').style.display = 'block';
+                        throw new Error('API key required');
+                    }
+                    throw new Error(err.detail || 'Failed');
+                }
                 review = await res.json();
                 showResults();
             } catch (e) {
-                alert(e.message);
+                if (e.message !== 'API key required') alert(e.message);
                 $('emptyState').style.display = 'flex';
             } finally {
                 $('loadingState').style.display = 'none';
@@ -1045,9 +1728,22 @@
             }
         }
 
+        const CONFIG_NAMES = {
+            terraform: 'Terraform',
+            cloudformation: 'CloudFormation',
+            kubernetes: 'Kubernetes',
+            dockerfile: 'Dockerfile',
+            helm: 'Helm Chart'
+        };
+
         function showResults() {
             const r = review.review;
             $('resultsContent').style.display = 'flex';
+
+            // Show config type
+            const configType = review.config_type || 'terraform';
+            $('configType').textContent = CONFIG_NAMES[configType] || configType;
+            $('configBadge').style.display = 'inline-flex';
 
             // Animate score
             const score = r.overall_score;
@@ -1061,17 +1757,19 @@
             // Counts
             $('criticalCount').textContent = r.issues.filter(i => i.severity === 'critical').length;
             $('warningCount').textContent = r.issues.filter(i => i.severity === 'warning').length;
+            $('infoCount').textContent = r.issues.filter(i => i.severity === 'info').length;
             $('passedCount').textContent = r.positives.length;
 
             // Summary
             $('summaryText').textContent = r.summary;
 
-            // Cost
+            // Cost (only for Terraform/CloudFormation)
             if (r.cost_estimate?.monthly_total > 0) {
                 $('costBadge').style.display = 'block';
                 $('costBadge').textContent = `$${r.cost_estimate.monthly_total.toFixed(0)}/mo`;
                 renderCostBreakdown(r.cost_estimate);
             } else {
+                $('costBadge').style.display = 'none';
                 $('costBreakdown').style.display = 'none';
             }
 
@@ -1142,7 +1840,11 @@
             try {
                 const fd = new FormData();
                 fd.append('file', new Blob([fileContent]), review.filename);
-                const res = await fetch(`${API}/review/pdf`, {method: 'POST', body: fd});
+                const res = await fetch(`${API}/review/pdf`, {
+                    method: 'POST',
+                    body: fd,
+                    headers: getHeaders()
+                });
                 if (!res.ok) throw new Error('Failed');
                 const a = document.createElement('a');
                 a.href = URL.createObjectURL(await res.blob());

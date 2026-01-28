@@ -1,20 +1,148 @@
 """
 Cloud Architecture Review Agent - Backend API
+Supports: Terraform, CloudFormation, Kubernetes, Dockerfile, Helm
+Multi-provider AI support: Anthropic, OpenAI, Google, Groq
 """
 import os
 import json
 import re
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from pydantic import BaseModel
 from typing import Optional, Union
-from anthropic import Anthropic
 from dotenv import load_dotenv
+
+# AI Provider SDKs
+from anthropic import Anthropic
+import openai
+import google.generativeai as genai
+from groq import Groq
 
 load_dotenv()
 
 app = FastAPI(title="Cloud Architecture Review Agent")
+
+# Provider configurations
+PROVIDERS = {
+    "anthropic": {
+        "name": "Anthropic",
+        "key_prefix": "sk-ant-",
+        "env_var": "ANTHROPIC_API_KEY",
+        "models": {
+            "claude-sonnet-4-20250514": {"name": "Claude Sonnet 4", "speed": "Fast", "cost": "$3/1M tokens"},
+            "claude-3-5-haiku-20241022": {"name": "Claude 3.5 Haiku", "speed": "Very Fast", "cost": "$0.25/1M tokens"},
+        },
+        "default_model": "claude-sonnet-4-20250514"
+    },
+    "openai": {
+        "name": "OpenAI",
+        "key_prefix": "sk-",
+        "env_var": "OPENAI_API_KEY",
+        "models": {
+            "gpt-4o": {"name": "GPT-4o", "speed": "Fast", "cost": "$2.50/1M tokens"},
+            "gpt-4o-mini": {"name": "GPT-4o Mini", "speed": "Very Fast", "cost": "$0.15/1M tokens"},
+        },
+        "default_model": "gpt-4o"
+    },
+    "google": {
+        "name": "Google",
+        "key_prefix": "AI",
+        "env_var": "GOOGLE_API_KEY",
+        "models": {
+            "gemini-1.5-pro": {"name": "Gemini 1.5 Pro", "speed": "Fast", "cost": "$1.25/1M tokens"},
+            "gemini-1.5-flash": {"name": "Gemini 1.5 Flash", "speed": "Very Fast", "cost": "$0.075/1M tokens"},
+        },
+        "default_model": "gemini-1.5-pro"
+    },
+    "groq": {
+        "name": "Groq",
+        "key_prefix": "gsk_",
+        "env_var": "GROQ_API_KEY",
+        "models": {
+            "llama-3.3-70b-versatile": {"name": "Llama 3.3 70B", "speed": "Blazing Fast", "cost": "Free tier available"},
+            "llama-3.1-8b-instant": {"name": "Llama 3.1 8B", "speed": "Ultra Fast", "cost": "Free tier available"},
+        },
+        "default_model": "llama-3.3-70b-versatile"
+    }
+}
+
+# Check for any configured API keys in environment
+def get_env_api_keys():
+    """Get all API keys configured in environment."""
+    keys = {}
+    for provider, config in PROVIDERS.items():
+        key = os.getenv(config["env_var"])
+        if key:
+            keys[provider] = key
+    return keys
+
+ENV_API_KEYS = get_env_api_keys()
+
+# Supported config types
+CONFIG_TYPES = {
+    "terraform": {
+        "extensions": [".tf", ".tf.json"],
+        "markers": ["resource ", "provider ", "terraform {"],
+        "name": "Terraform",
+        "language": "hcl"
+    },
+    "cloudformation": {
+        "extensions": [".yaml", ".yml", ".json", ".template"],
+        "markers": ["AWSTemplateFormatVersion", "Resources:", "AWS::"],
+        "name": "CloudFormation",
+        "language": "yaml"
+    },
+    "kubernetes": {
+        "extensions": [".yaml", ".yml"],
+        "markers": ["apiVersion:", "kind:", "metadata:"],
+        "name": "Kubernetes",
+        "language": "yaml"
+    },
+    "dockerfile": {
+        "extensions": ["Dockerfile", ".dockerfile"],
+        "markers": ["FROM ", "RUN ", "CMD ", "ENTRYPOINT "],
+        "name": "Dockerfile",
+        "language": "dockerfile"
+    },
+    "helm": {
+        "extensions": [".yaml", ".yml", ".tpl"],
+        "markers": ["{{", ".Values.", ".Release.", "helm.sh/chart"],
+        "name": "Helm Chart",
+        "language": "yaml"
+    }
+}
+
+
+def detect_config_type(filename: str, content: str) -> str:
+    """Detect the configuration type from filename and content."""
+    filename_lower = filename.lower()
+
+    # Check Dockerfile first (special case)
+    if "dockerfile" in filename_lower:
+        return "dockerfile"
+
+    # Check by extension
+    for config_type, info in CONFIG_TYPES.items():
+        for ext in info["extensions"]:
+            if filename_lower.endswith(ext):
+                # For YAML files, need to check content markers
+                if ext in [".yaml", ".yml", ".json", ".template"]:
+                    # Check for specific markers
+                    for marker in info["markers"]:
+                        if marker in content:
+                            return config_type
+                else:
+                    return config_type
+
+    # Check by content markers
+    for config_type, info in CONFIG_TYPES.items():
+        marker_count = sum(1 for m in info["markers"] if m in content)
+        if marker_count >= 2:
+            return config_type
+
+    # Default to terraform for .tf files or unknown
+    return "terraform"
 
 app.add_middleware(
     CORSMiddleware,
@@ -24,7 +152,83 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+
+def get_api_key(provider: str, header_key: Optional[str] = None) -> str:
+    """Get API key from environment or header for specified provider."""
+    if provider not in PROVIDERS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unknown provider: {provider}. Supported: {list(PROVIDERS.keys())}"
+        )
+
+    # Priority: Environment variable > Header
+    env_key = ENV_API_KEYS.get(provider)
+    api_key = env_key or header_key
+
+    if not api_key:
+        env_var = PROVIDERS[provider]["env_var"]
+        raise HTTPException(
+            status_code=401,
+            detail=f"API key required for {PROVIDERS[provider]['name']}. Set {env_var} in .env or provide X-API-Key header."
+        )
+
+    return api_key
+
+
+def validate_model(provider: str, model: Optional[str]) -> str:
+    """Validate and return the model to use."""
+    if not model:
+        return PROVIDERS[provider]["default_model"]
+
+    if model not in PROVIDERS[provider]["models"]:
+        valid_models = list(PROVIDERS[provider]["models"].keys())
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid model '{model}' for {provider}. Valid models: {valid_models}"
+        )
+
+    return model
+
+
+async def call_ai_provider(provider: str, model: str, api_key: str, prompt: str) -> str:
+    """Call the appropriate AI provider and return the response text."""
+
+    if provider == "anthropic":
+        client = Anthropic(api_key=api_key)
+        message = client.messages.create(
+            model=model,
+            max_tokens=4096,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        return message.content[0].text
+
+    elif provider == "openai":
+        client = openai.OpenAI(api_key=api_key)
+        response = client.chat.completions.create(
+            model=model,
+            max_tokens=4096,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        return response.choices[0].message.content
+
+    elif provider == "google":
+        genai.configure(api_key=api_key)
+        model_instance = genai.GenerativeModel(model)
+        response = model_instance.generate_content(prompt)
+        return response.text
+
+    elif provider == "groq":
+        client = Groq(api_key=api_key)
+        response = client.chat.completions.create(
+            model=model,
+            max_tokens=4096,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        return response.choices[0].message.content
+
+    else:
+        raise HTTPException(status_code=400, detail=f"Unknown provider: {provider}")
+
 
 # AWS pricing estimates (simplified, us-east-1)
 AWS_PRICING = {
@@ -61,7 +265,58 @@ SECRET_PATTERNS = [
 ]
 
 
-def detect_secrets(content: str) -> list[dict]:
+def get_secret_fix_code(secret_name: str, config_type: str) -> str:
+    """Get format-specific fix code for secrets."""
+    var_name = secret_name.lower().replace(" ", "_")
+
+    fixes = {
+        "terraform": f'''# Use variables or secrets manager instead:
+variable "{var_name}" {{
+  description = "Sensitive value - do not hardcode"
+  type        = string
+  sensitive   = true
+}}''',
+        "cloudformation": f'''# Use Parameters or Secrets Manager:
+Parameters:
+  {var_name.title().replace("_", "")}:
+    Type: String
+    NoEcho: true
+    Description: "Sensitive value - reference from Secrets Manager"
+
+# Or use dynamic reference:
+# {{{{resolve:secretsmanager:MySecret:SecretString:{var_name}}}}}''',
+        "kubernetes": f'''# Use Secrets instead of hardcoding:
+apiVersion: v1
+kind: Secret
+metadata:
+  name: my-secret
+type: Opaque
+stringData:
+  {var_name}: "<value-from-external-secret-manager>"
+
+# Then reference in pod:
+# envFrom:
+#   - secretRef:
+#       name: my-secret''',
+        "dockerfile": f'''# Never hardcode secrets in Dockerfile!
+# Use build args (for non-sensitive) or runtime env vars:
+ARG {var_name.upper()}
+# Better: Use Docker secrets or env vars at runtime
+# docker run -e {var_name.upper()}=<value> myimage''',
+        "helm": f'''# Use values.yaml and Kubernetes secrets:
+# values.yaml:
+# secrets:
+#   {var_name}: ""  # Set via --set or external secrets
+
+# template:
+# {{{{- if .Values.secrets.{var_name} }}}}
+#   {var_name}: {{{{ .Values.secrets.{var_name} | b64enc }}}}
+# {{{{- end }}}}'''
+    }
+    return fixes.get(config_type, fixes["terraform"])
+
+
+def detect_secrets(content: str, config_type: str = "terraform") -> list[dict]:
     """Scan content for hardcoded secrets and sensitive data."""
     found_secrets = []
     lines = content.split('\n')
@@ -81,16 +336,17 @@ def detect_secrets(content: str) -> list[dict]:
                     "severity": pattern_info["severity"],
                     "category": "security",
                     "title": f"Hardcoded {pattern_info['name']} Detected",
-                    "description": f"Found potential {pattern_info['name']} on line {line_num}. Hardcoded secrets in infrastructure code pose severe security risks. Use environment variables, AWS Secrets Manager, or HashiCorp Vault instead.",
+                    "description": f"Found potential {pattern_info['name']} on line {line_num}. Hardcoded secrets in infrastructure code pose severe security risks. Use environment variables or a secrets manager instead.",
                     "resource": None,
                     "line_hint": line_num,
-                    "fix_code": f'# Use variables or secrets manager instead:\nvariable "{pattern_info["name"].lower().replace(" ", "_")}" {{\n  description = "Sensitive value - do not hardcode"\n  type        = string\n  sensitive   = true\n}}'
+                    "fix_code": get_secret_fix_code(pattern_info['name'], config_type)
                 })
 
     return found_secrets
 
 
-REVIEW_PROMPT = """You are a senior cloud architect. Analyze this Terraform configuration and return a JSON response.
+REVIEW_PROMPTS = {
+    "terraform": """You are a senior cloud architect. Analyze this Terraform configuration and return a JSON response.
 
 IMPORTANT: Return ONLY valid JSON, no markdown or explanation outside the JSON.
 
@@ -104,9 +360,9 @@ IMPORTANT: Return ONLY valid JSON, no markdown or explanation outside the JSON.
       "category": "security" | "cost" | "reliability" | "best-practice",
       "title": "Short title of the issue",
       "description": "Detailed explanation of what's wrong and why it matters",
-      "resource": "resource name from terraform (e.g., aws_instance.web)",
+      "resource": "resource name (e.g., aws_instance.web)",
       "line_hint": "line number or range if identifiable, otherwise null",
-      "fix_code": "The corrected Terraform code snippet that fixes this issue"
+      "fix_code": "The corrected code snippet that fixes this issue"
     }}
   ],
   "positives": ["List of things done well in this configuration"],
@@ -119,23 +375,157 @@ IMPORTANT: Return ONLY valid JSON, no markdown or explanation outside the JSON.
   ]
 }}
 
-Categories:
-- security: Open ports, missing encryption, exposed secrets, overly permissive IAM, public access
-- cost: Oversized instances, missing spot/reserved options, unnecessary resources
-- reliability: Single points of failure, no backups, no multi-AZ, missing health checks
-- best-practice: Hardcoded values, missing tags, poor naming, no modules
-
-Severity levels:
-- critical: Security vulnerabilities, data exposure risks, compliance violations
-- warning: Important issues that should be addressed but aren't immediate risks
-- info: Suggestions and improvements for better practices
-
-For each issue, ALWAYS provide fix_code with the corrected Terraform snippet.
+Focus on: Open security groups, missing encryption, exposed secrets, overly permissive IAM, public access, oversized instances, single points of failure, missing backups, hardcoded values, missing tags.
 
 TERRAFORM CONFIG:
 ```hcl
-{terraform_content}
+{content}
+```""",
+
+    "cloudformation": """You are a senior AWS cloud architect. Analyze this CloudFormation template and return a JSON response.
+
+IMPORTANT: Return ONLY valid JSON, no markdown or explanation outside the JSON.
+
+{{
+  "summary": "2-3 sentence overview of the template and main concerns",
+  "overall_score": <number 0-100, where 100 is perfect>,
+  "issues": [
+    {{
+      "id": "unique-id",
+      "severity": "critical" | "warning" | "info",
+      "category": "security" | "cost" | "reliability" | "best-practice",
+      "title": "Short title of the issue",
+      "description": "Detailed explanation of what's wrong and why it matters",
+      "resource": "logical resource name",
+      "line_hint": "line number or range if identifiable, otherwise null",
+      "fix_code": "The corrected YAML/JSON snippet that fixes this issue"
+    }}
+  ],
+  "positives": ["List of things done well"],
+  "resource_inventory": [
+    {{
+      "type": "AWS::EC2::Instance | AWS::RDS::DBInstance | AWS::S3::Bucket | etc",
+      "name": "logical resource name",
+      "details": "instance type, size, or other cost-relevant info"
+    }}
+  ]
+}}
+
+Focus on: Security group rules, IAM policies, encryption settings, public access, DeletionPolicy, UpdateReplacePolicy, missing Metadata, Parameter constraints, hardcoded values.
+
+CLOUDFORMATION TEMPLATE:
+```yaml
+{content}
+```""",
+
+    "kubernetes": """You are a senior Kubernetes security engineer. Analyze this Kubernetes manifest and return a JSON response.
+
+IMPORTANT: Return ONLY valid JSON, no markdown or explanation outside the JSON.
+
+{{
+  "summary": "2-3 sentence overview of the manifest and main concerns",
+  "overall_score": <number 0-100, where 100 is perfect>,
+  "issues": [
+    {{
+      "id": "unique-id",
+      "severity": "critical" | "warning" | "info",
+      "category": "security" | "cost" | "reliability" | "best-practice",
+      "title": "Short title of the issue",
+      "description": "Detailed explanation of what's wrong and why it matters",
+      "resource": "resource kind/name",
+      "line_hint": "line number or range if identifiable, otherwise null",
+      "fix_code": "The corrected YAML snippet that fixes this issue"
+    }}
+  ],
+  "positives": ["List of things done well"],
+  "resource_inventory": [
+    {{
+      "type": "Deployment | Service | Pod | ConfigMap | etc",
+      "name": "resource name",
+      "details": "replicas, image, resource limits"
+    }}
+  ]
+}}
+
+Focus on: Running as root, privileged containers, missing resource limits/requests, hostNetwork/hostPID, missing securityContext, latest image tags, missing readiness/liveness probes, secrets in env vars, missing network policies.
+
+KUBERNETES MANIFEST:
+```yaml
+{content}
+```""",
+
+    "dockerfile": """You are a senior container security engineer. Analyze this Dockerfile and return a JSON response.
+
+IMPORTANT: Return ONLY valid JSON, no markdown or explanation outside the JSON.
+
+{{
+  "summary": "2-3 sentence overview of the Dockerfile and main concerns",
+  "overall_score": <number 0-100, where 100 is perfect>,
+  "issues": [
+    {{
+      "id": "unique-id",
+      "severity": "critical" | "warning" | "info",
+      "category": "security" | "cost" | "reliability" | "best-practice",
+      "title": "Short title of the issue",
+      "description": "Detailed explanation of what's wrong and why it matters",
+      "resource": "instruction or stage",
+      "line_hint": "line number or range if identifiable, otherwise null",
+      "fix_code": "The corrected Dockerfile instruction(s)"
+    }}
+  ],
+  "positives": ["List of things done well"],
+  "resource_inventory": [
+    {{
+      "type": "base_image | stage | layer",
+      "name": "image or stage name",
+      "details": "tag, size considerations"
+    }}
+  ]
+}}
+
+Focus on: Running as root, using latest tags, hardcoded secrets/passwords, unnecessary packages, missing USER instruction, ADD vs COPY, large base images, missing .dockerignore recommendations, multi-stage builds, layer optimization.
+
+DOCKERFILE:
+```dockerfile
+{content}
+```""",
+
+    "helm": """You are a senior Kubernetes/Helm engineer. Analyze this Helm chart template and return a JSON response.
+
+IMPORTANT: Return ONLY valid JSON, no markdown or explanation outside the JSON.
+
+{{
+  "summary": "2-3 sentence overview of the chart and main concerns",
+  "overall_score": <number 0-100, where 100 is perfect>,
+  "issues": [
+    {{
+      "id": "unique-id",
+      "severity": "critical" | "warning" | "info",
+      "category": "security" | "cost" | "reliability" | "best-practice",
+      "title": "Short title of the issue",
+      "description": "Detailed explanation of what's wrong and why it matters",
+      "resource": "template or value reference",
+      "line_hint": "line number or range if identifiable, otherwise null",
+      "fix_code": "The corrected template snippet"
+    }}
+  ],
+  "positives": ["List of things done well"],
+  "resource_inventory": [
+    {{
+      "type": "Deployment | Service | ConfigMap | etc",
+      "name": "resource name",
+      "details": "relevant values"
+    }}
+  ]
+}}
+
+Focus on: Hardcoded values that should be in values.yaml, missing default values, security contexts, resource limits, missing required values validation, image tag handling, secrets management.
+
+HELM TEMPLATE:
+```yaml
+{content}
 ```"""
+}
 
 
 class Issue(BaseModel):
@@ -174,6 +564,7 @@ class ReviewResponse(BaseModel):
     review: StructuredReview
     filename: str
     lines_analyzed: int
+    config_type: str = "terraform"
 
 
 def estimate_costs(terraform_content: str, resource_inventory: list) -> CostEstimate:
@@ -265,37 +656,48 @@ def parse_review_response(response_text: str) -> dict:
     return json.loads(text)
 
 
-async def analyze_terraform(terraform_content: str, filename: str) -> ReviewResponse:
-    """Core analysis function used by both endpoints."""
+async def analyze_config(
+    content: str,
+    filename: str,
+    api_key: str,
+    provider: str = "anthropic",
+    model: str = None,
+    config_type: str = None
+) -> ReviewResponse:
+    """Core analysis function for all config types."""
 
-    if len(terraform_content) > 100000:
+    if len(content) > 100000:
         raise HTTPException(
             status_code=400,
             detail="Content too large. Please send under 100KB."
         )
 
-    prompt = REVIEW_PROMPT.format(terraform_content=terraform_content)
+    # Auto-detect config type if not specified
+    if not config_type:
+        config_type = detect_config_type(filename, content)
+
+    # Validate and get model
+    model = validate_model(provider, model)
+
+    # Get the appropriate prompt
+    prompt_template = REVIEW_PROMPTS.get(config_type, REVIEW_PROMPTS["terraform"])
+    prompt = prompt_template.format(content=content)
 
     try:
-        message = client.messages.create(
-            model="claude-sonnet-4-20250514",  # Balanced speed + quality
-            max_tokens=4096,
-            messages=[
-                {"role": "user", "content": prompt}
-            ]
-        )
-
-        response_text = message.content[0].text
+        # Call the AI provider
+        response_text = await call_ai_provider(provider, model, api_key, prompt)
         review_data = parse_review_response(response_text)
 
         # Detect hardcoded secrets
-        secret_issues = detect_secrets(terraform_content)
+        secret_issues = detect_secrets(content, config_type)
 
-        # Calculate cost estimate
-        cost_estimate = estimate_costs(
-            terraform_content,
-            review_data.get("resource_inventory", [])
-        )
+        # Calculate cost estimate (only for AWS resources)
+        cost_estimate = None
+        if config_type in ["terraform", "cloudformation"]:
+            cost_estimate = estimate_costs(
+                content,
+                review_data.get("resource_inventory", [])
+            )
 
         # Combine Claude's issues with detected secrets (secrets first - they're critical)
         all_issues = secret_issues + review_data.get("issues", [])
@@ -318,7 +720,8 @@ async def analyze_terraform(terraform_content: str, filename: str) -> ReviewResp
         return ReviewResponse(
             review=structured_review,
             filename=filename,
-            lines_analyzed=len(terraform_content.splitlines())
+            lines_analyzed=len(content.splitlines()),
+            config_type=config_type
         )
 
     except json.JSONDecodeError as e:
@@ -327,52 +730,138 @@ async def analyze_terraform(terraform_content: str, filename: str) -> ReviewResp
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
 
 
+SUPPORTED_EXTENSIONS = ['.tf', '.tf.json', '.yaml', '.yml', '.json', '.template', '.tpl', '.dockerfile']
+
+
 @app.get("/")
 async def root():
-    return {"status": "healthy", "service": "Cloud Architecture Review Agent"}
+    """Return API status and available providers/models."""
+    # Build provider info for frontend
+    providers_info = {}
+    for provider_id, config in PROVIDERS.items():
+        providers_info[provider_id] = {
+            "name": config["name"],
+            "models": {
+                model_id: model_info
+                for model_id, model_info in config["models"].items()
+            },
+            "default_model": config["default_model"],
+            "configured": provider_id in ENV_API_KEYS  # True if env var is set
+        }
+
+    return {
+        "status": "healthy",
+        "service": "Cloud Architecture Review Agent",
+        "supported_formats": list(CONFIG_TYPES.keys()),
+        "providers": providers_info,
+        # Legacy field for backwards compatibility
+        "api_key_configured": bool(ENV_API_KEYS)
+    }
 
 
 @app.post("/review", response_model=ReviewResponse)
-async def review_terraform(file: UploadFile = File(...)):
-    """Upload a Terraform file and get a structured architecture review."""
+async def review_config(
+    file: UploadFile = File(...),
+    x_api_key: Optional[str] = Header(None, alias="X-API-Key"),
+    x_provider: Optional[str] = Header("anthropic", alias="X-Provider"),
+    x_model: Optional[str] = Header(None, alias="X-Model")
+):
+    """Upload a configuration file and get a structured security review.
 
-    if not file.filename.endswith(('.tf', '.tf.json')):
+    Headers:
+    - X-API-Key: Your API key (optional if env var is set for the provider)
+    - X-Provider: AI provider to use (anthropic, openai, google, groq). Default: anthropic
+    - X-Model: Model to use (optional, uses provider's default)
+
+    Supported formats: Terraform, CloudFormation, Kubernetes, Dockerfile, Helm
+    """
+    filename = file.filename.lower()
+
+    # Check for supported file types
+    is_supported = (
+        any(filename.endswith(ext) for ext in SUPPORTED_EXTENSIONS) or
+        "dockerfile" in filename
+    )
+
+    if not is_supported:
         raise HTTPException(
             status_code=400,
-            detail="Please upload a Terraform file (.tf or .tf.json)"
+            detail=f"Unsupported file type. Supported: Terraform (.tf), CloudFormation (.yaml/.json), Kubernetes (.yaml), Dockerfile, Helm (.yaml/.tpl)"
         )
 
+    api_key = get_api_key(x_provider, x_api_key)
     content = await file.read()
-    terraform_content = content.decode('utf-8')
+    file_content = content.decode('utf-8')
 
-    return await analyze_terraform(terraform_content, file.filename)
+    return await analyze_config(file_content, file.filename, api_key, x_provider, x_model)
 
 
 @app.post("/review/text", response_model=ReviewResponse)
-async def review_terraform_text(terraform_content: str):
-    """Review Terraform content passed as text."""
-    return await analyze_terraform(terraform_content, "pasted_config.tf")
+async def review_config_text(
+    content: str,
+    config_type: str = None,
+    x_api_key: Optional[str] = Header(None, alias="X-API-Key"),
+    x_provider: Optional[str] = Header("anthropic", alias="X-Provider"),
+    x_model: Optional[str] = Header(None, alias="X-Model")
+):
+    """Review configuration content passed as text.
+
+    Headers:
+    - X-API-Key: Your API key (optional if env var is set for the provider)
+    - X-Provider: AI provider to use (anthropic, openai, google, groq). Default: anthropic
+    - X-Model: Model to use (optional, uses provider's default)
+
+    Optionally specify config_type: terraform, cloudformation, kubernetes, dockerfile, helm
+    """
+    filename = "pasted_config"
+    if config_type:
+        ext_map = {"terraform": ".tf", "cloudformation": ".yaml", "kubernetes": ".yaml", "dockerfile": "", "helm": ".yaml"}
+        filename += ext_map.get(config_type, ".tf")
+    else:
+        filename += ".tf"
+
+    api_key = get_api_key(x_provider, x_api_key)
+    return await analyze_config(content, filename, api_key, x_provider, x_model, config_type)
 
 
 @app.post("/review/pdf")
-async def generate_pdf_report(file: UploadFile = File(...)):
-    """Generate a PDF report from a Terraform file."""
+async def generate_pdf_report(
+    file: UploadFile = File(...),
+    x_api_key: Optional[str] = Header(None, alias="X-API-Key"),
+    x_provider: Optional[str] = Header("anthropic", alias="X-Provider"),
+    x_model: Optional[str] = Header(None, alias="X-Model")
+):
+    """Generate a PDF report from a configuration file.
 
-    if not file.filename.endswith(('.tf', '.tf.json')):
+    Headers:
+    - X-API-Key: Your API key (optional if env var is set for the provider)
+    - X-Provider: AI provider to use (anthropic, openai, google, groq). Default: anthropic
+    - X-Model: Model to use (optional, uses provider's default)
+    """
+    filename = file.filename.lower()
+
+    is_supported = (
+        any(filename.endswith(ext) for ext in SUPPORTED_EXTENSIONS) or
+        "dockerfile" in filename
+    )
+
+    if not is_supported:
         raise HTTPException(
             status_code=400,
-            detail="Please upload a Terraform file (.tf or .tf.json)"
+            detail="Unsupported file type for PDF generation"
         )
 
+    api_key = get_api_key(x_provider, x_api_key)
     content = await file.read()
-    terraform_content = content.decode('utf-8')
+    file_content = content.decode('utf-8')
 
     # Get the review
-    review_response = await analyze_terraform(terraform_content, file.filename)
+    review_response = await analyze_config(file_content, file.filename, api_key, x_provider, x_model)
     review = review_response.review
+    config_type = review_response.config_type
 
     # Generate HTML for PDF
-    html_content = generate_report_html(review, file.filename)
+    html_content = generate_report_html(review, file.filename, config_type)
 
     # Convert to PDF using WeasyPrint
     try:
@@ -390,8 +879,9 @@ async def generate_pdf_report(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=f"PDF generation failed: {str(e)}")
 
 
-def generate_report_html(review: StructuredReview, filename: str) -> str:
+def generate_report_html(review: StructuredReview, filename: str, config_type: str = "terraform") -> str:
     """Generate HTML for PDF report."""
+    config_name = CONFIG_TYPES.get(config_type, {}).get("name", "Configuration")
 
     # Count issues by severity
     critical_count = len([i for i in review.issues if i.severity == "critical"])
@@ -494,8 +984,8 @@ def generate_report_html(review: StructuredReview, filename: str) -> str:
     </head>
     <body>
         <div class="header">
-            <h1>Terraform Security Review</h1>
-            <p class="subtitle">Generated by Cloud Architecture Review Agent</p>
+            <h1>{config_name} Security Review</h1>
+            <p class="subtitle">Generated by TerraGuard</p>
             <p class="subtitle">File: {filename}</p>
         </div>
 

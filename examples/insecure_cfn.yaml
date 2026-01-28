@@ -1,0 +1,47 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Insecure CloudFormation Example
+
+Resources:
+  WebSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Web Security Group
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 0
+          ToPort: 65535
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+
+  WebInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t3.2xlarge
+      ImageId: ami-12345678
+      SecurityGroupIds:
+        - !Ref WebSecurityGroup
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash
+          export DB_PASSWORD="SuperSecret123!"
+          echo "password=MyDBPass123" > /etc/app.conf
+
+  DataBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: my-company-data
+      AccessControl: PublicRead
+
+  Database:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceIdentifier: prod-database
+      Engine: mysql
+      DBInstanceClass: db.r5.4xlarge
+      AllocatedStorage: 1000
+      MasterUsername: admin
+      MasterUserPassword: SuperSecret123!
+      PubliclyAccessible: true

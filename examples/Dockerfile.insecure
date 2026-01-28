@@ -1,0 +1,24 @@
+# Insecure Dockerfile Example
+FROM ubuntu:latest
+
+# Running as root (bad)
+ENV DB_PASSWORD=SuperSecret123!
+ENV API_KEY=sk-live-abcdefghijklmnop
+
+RUN apt-get update && apt-get install -y \
+    curl \
+    wget \
+    vim \
+    netcat \
+    telnet \
+    ssh
+
+COPY . /app
+WORKDIR /app
+
+# Hardcoded credentials
+RUN echo "mysql_password=MyDBPass123" > /app/.env
+
+EXPOSE 22 80 443 3306 5432
+
+CMD ["python", "app.py"]
