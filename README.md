@@ -17,6 +17,7 @@ Scan your Terraform, CloudFormation, Kubernetes, Dockerfiles, and Helm charts fo
 ## Features
 
 - **Multi-Provider AI** - Choose from Anthropic, OpenAI, Google, or Groq
+- **Privacy Mode** - Anonymizes sensitive data (IPs, ARNs, secrets, domains) before sending to AI — results are deanonymized automatically
 - **Secrets Detection** - Finds hardcoded passwords, API keys, and tokens
 - **Security Analysis** - Detects open ports, missing encryption, IAM issues
 - **Cost Estimation** - AWS resource cost breakdown for Terraform/CloudFormation
@@ -58,7 +59,16 @@ pip install -r requirements.txt
 
 ### 2. Configure API Key
 
-**Option A: Environment Variable**
+**Option A: In-App Setup (Recommended)**
+
+On first launch, a welcome screen guides you through setup:
+1. Pick your AI provider (Anthropic, OpenAI, Google, or Groq)
+2. Enter your API key — it's saved in your browser for next time
+3. You're ready to scan!
+
+You can add or switch providers anytime from the **Settings** panel in the sidebar.
+
+**Option B: Environment Variable**
 ```bash
 cp .env.example .env
 # Add your key(s) to .env:
@@ -67,9 +77,6 @@ cp .env.example .env
 # GOOGLE_API_KEY=AIza...
 # GROQ_API_KEY=gsk_...
 ```
-
-**Option B: Enter in Browser**
-Skip `.env` setup - enter your API key directly in the app.
 
 **Get API Keys:**
 - [Anthropic Console](https://console.anthropic.com/settings/keys)

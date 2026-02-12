@@ -12,6 +12,7 @@ from fastapi.responses import Response
 from pydantic import BaseModel
 from typing import Optional, Union
 from dotenv import load_dotenv
+from anonymizer import ContentAnonymizer
 
 # AI Provider SDKs
 from anthropic import Anthropic
@@ -560,11 +561,23 @@ class StructuredReview(BaseModel):
     cost_estimate: Optional[CostEstimate] = None
 
 
+class RedactedItem(BaseModel):
+    original: str
+    replacement: str
+    category: str
+
+class PrivacyReport(BaseModel):
+    enabled: bool = False
+    items_redacted: int = 0
+    categories: dict = {}
+    redactions: list[RedactedItem] = []
+
 class ReviewResponse(BaseModel):
     review: StructuredReview
     filename: str
     lines_analyzed: int
     config_type: str = "terraform"
+    privacy: Optional[PrivacyReport] = None
 
 
 def estimate_costs(terraform_content: str, resource_inventory: list) -> CostEstimate:
@@ -662,7 +675,8 @@ async def analyze_config(
     api_key: str,
     provider: str = "anthropic",
     model: str = None,
-    config_type: str = None
+    config_type: str = None,
+    anonymize: bool = False
 ) -> ReviewResponse:
     """Core analysis function for all config types."""
 
@@ -679,19 +693,87 @@ async def analyze_config(
     # Validate and get model
     model = validate_model(provider, model)
 
+    # Always detect secrets on ORIGINAL content (local regex, no AI needed)
+    secret_issues = detect_secrets(content, config_type)
+
+    # Privacy Mode: anonymize content before sending to AI
+    anon_mapping = None
+    privacy_report = None
+    ai_content = content
+    if anonymize:
+        anonymizer = ContentAnonymizer()
+        ai_content, anon_mapping = anonymizer.anonymize(content)
+
+        # Build privacy report from mapping
+        categories = {}
+        redactions = []
+        for pseudonym, original in anon_mapping.items():
+            if pseudonym.startswith('REDACTED_SECRET_'):
+                cat = 'secret'
+                # Mask the middle of the secret for the report
+                if len(original) > 8:
+                    display = original[:4] + '*' * (len(original) - 8) + original[-4:]
+                else:
+                    display = '*' * len(original)
+            elif pseudonym.startswith('10.') or pseudonym.startswith('172.') or pseudonym.startswith('192.'):
+                cat = 'ip'
+                display = original
+            elif pseudonym.startswith('arn:'):
+                cat = 'arn'
+                display = original
+            elif pseudonym.startswith('redacted-host-'):
+                cat = 'domain'
+                display = original
+            elif '@redacted-domain' in pseudonym:
+                cat = 'email'
+                display = original
+            elif pseudonym.startswith('redacted-bucket-'):
+                cat = 'bucket'
+                display = original
+            elif pseudonym.startswith('100'):
+                cat = 'account_id'
+                display = original
+            else:
+                cat = 'other'
+                display = original
+
+            categories[cat] = categories.get(cat, 0) + 1
+            redactions.append(RedactedItem(
+                original=display,
+                replacement=pseudonym,
+                category=cat
+            ))
+
+        privacy_report = PrivacyReport(
+            enabled=True,
+            items_redacted=len(anon_mapping),
+            categories=categories,
+            redactions=redactions
+        )
+
+        # Log what was anonymized
+        print(f"\n{'='*60}")
+        print(f"PRIVACY MODE: {len(anon_mapping)} items redacted")
+        for pseudo, original in anon_mapping.items():
+            print(f"  {original} -> {pseudo}")
+        print(f"{'='*60}")
+        print(f"\nContent sent to AI:\n{ai_content[:500]}...")
+        print(f"{'='*60}\n")
+
     # Get the appropriate prompt
     prompt_template = REVIEW_PROMPTS.get(config_type, REVIEW_PROMPTS["terraform"])
-    prompt = prompt_template.format(content=content)
+    prompt = prompt_template.format(content=ai_content)
 
     try:
-        # Call the AI provider
+        # Call the AI provider with (possibly anonymized) content
         response_text = await call_ai_provider(provider, model, api_key, prompt)
         review_data = parse_review_response(response_text)
 
-        # Detect hardcoded secrets
-        secret_issues = detect_secrets(content, config_type)
+        # Privacy Mode: de-anonymize AI results back to original values
+        if anon_mapping:
+            review_data = anonymizer.deanonymize_results(review_data, anon_mapping)
 
-        # Calculate cost estimate (only for AWS resources)
+        # Calculate cost estimate (only for AWS resources) - use original content
         cost_estimate = None
         if config_type in ["terraform", "cloudformation"]:
             cost_estimate = estimate_costs(
@@ -699,7 +781,7 @@ async def analyze_config(
                 review_data.get("resource_inventory", [])
             )
 
-        # Combine Claude's issues with detected secrets (secrets first - they're critical)
+        # Combine AI issues with detected secrets (secrets first - they're critical)
         all_issues = secret_issues + review_data.get("issues", [])
 
         # Adjust score if secrets were found (major penalty)
@@ -721,7 +803,8 @@ async def analyze_config(
             review=structured_review,
             filename=filename,
             lines_analyzed=len(content.splitlines()),
-            config_type=config_type
+            config_type=config_type,
+            privacy=privacy_report
         )
 
     except json.JSONDecodeError as e:
@@ -764,7 +847,8 @@ async def review_config(
     file: UploadFile = File(...),
     x_api_key: Optional[str] = Header(None, alias="X-API-Key"),
     x_provider: Optional[str] = Header("anthropic", alias="X-Provider"),
-    x_model: Optional[str] = Header(None, alias="X-Model")
+    x_model: Optional[str] = Header(None, alias="X-Model"),
+    x_anonymize: Optional[str] = Header("false", alias="X-Anonymize")
 ):
     """Upload a configuration file and get a structured security review.
 
@@ -772,6 +856,7 @@ async def review_config(
     - X-API-Key: Your API key (optional if env var is set for the provider)
     - X-Provider: AI provider to use (anthropic, openai, google, groq). Default: anthropic
     - X-Model: Model to use (optional, uses provider's default)
+    - X-Anonymize: Enable privacy mode to redact sensitive data before AI analysis (true/false)
 
     Supported formats: Terraform, CloudFormation, Kubernetes, Dockerfile, Helm
     """
@@ -792,8 +877,9 @@ async def review_config(
     api_key = get_api_key(x_provider, x_api_key)
     content = await file.read()
     file_content = content.decode('utf-8')
+    anonymize = x_anonymize.lower() == "true"
 
-    return await analyze_config(file_content, file.filename, api_key, x_provider, x_model)
+    return await analyze_config(file_content, file.filename, api_key, x_provider, x_model, anonymize=anonymize)
 
 
 @app.post("/review/text", response_model=ReviewResponse)
@@ -802,7 +888,8 @@ async def review_config_text(
     config_type: str = None,
     x_api_key: Optional[str] = Header(None, alias="X-API-Key"),
     x_provider: Optional[str] = Header("anthropic", alias="X-Provider"),
-    x_model: Optional[str] = Header(None, alias="X-Model")
+    x_model: Optional[str] = Header(None, alias="X-Model"),
+    x_anonymize: Optional[str] = Header("false", alias="X-Anonymize")
 ):
     """Review configuration content passed as text.
 
@@ -810,6 +897,7 @@ async def review_config_text(
     - X-API-Key: Your API key (optional if env var is set for the provider)
     - X-Provider: AI provider to use (anthropic, openai, google, groq). Default: anthropic
     - X-Model: Model to use (optional, uses provider's default)
+    - X-Anonymize: Enable privacy mode to redact sensitive data before AI analysis (true/false)
 
     Optionally specify config_type: terraform, cloudformation, kubernetes, dockerfile, helm
     """
@@ -820,8 +908,9 @@ async def review_config_text(
     else:
         filename += ".tf"
 
+    anonymize = x_anonymize.lower() == "true"
     api_key = get_api_key(x_provider, x_api_key)
-    return await analyze_config(content, filename, api_key, x_provider, x_model, config_type)
+    return await analyze_config(content, filename, api_key, x_provider, x_model, config_type, anonymize=anonymize)
 
 
 @app.post("/review/pdf")
@@ -829,7 +918,8 @@ async def generate_pdf_report(
     file: UploadFile = File(...),
     x_api_key: Optional[str] = Header(None, alias="X-API-Key"),
     x_provider: Optional[str] = Header("anthropic", alias="X-Provider"),
-    x_model: Optional[str] = Header(None, alias="X-Model")
+    x_model: Optional[str] = Header(None, alias="X-Model"),
+    x_anonymize: Optional[str] = Header("false", alias="X-Anonymize")
 ):
     """Generate a PDF report from a configuration file.
 
@@ -837,6 +927,7 @@ async def generate_pdf_report(
     - X-API-Key: Your API key (optional if env var is set for the provider)
     - X-Provider: AI provider to use (anthropic, openai, google, groq). Default: anthropic
     - X-Model: Model to use (optional, uses provider's default)
+    - X-Anonymize: Enable privacy mode to redact sensitive data before AI analysis (true/false)
     """
     filename = file.filename.lower()
 
@@ -854,9 +945,10 @@ async def generate_pdf_report(
     api_key = get_api_key(x_provider, x_api_key)
     content = await file.read()
     file_content = content.decode('utf-8')
+    anonymize = x_anonymize.lower() == "true"
 
     # Get the review
-    review_response = await analyze_config(file_content, file.filename, api_key, x_provider, x_model)
+    review_response = await analyze_config(file_content, file.filename, api_key, x_provider, x_model, anonymize=anonymize)
     review = review_response.review
     config_type = review_response.config_type
 

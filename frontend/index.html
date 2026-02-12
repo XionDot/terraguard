@@ -72,7 +72,7 @@
 
         /* Header */
         header {
-            padding: 20px 32px;
+            padding: 12px 24px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -145,20 +145,23 @@
         main {
             flex: 1;
             display: grid;
-            grid-template-columns: 400px 1fr;
+            grid-template-columns: 380px 1fr;
             gap: 0;
             max-width: 1600px;
             margin: 0 auto;
             width: 100%;
+            height: calc(100vh - 56px);
+            overflow: hidden;
         }
 
         /* Input Section */
         .input-section {
-            padding: 32px;
+            padding: 16px 20px;
             border-right: 1px solid var(--border);
             display: flex;
             flex-direction: column;
-            gap: 24px;
+            gap: 12px;
+            overflow-y: auto;
         }
 
         .section-label {
@@ -167,14 +170,14 @@
             text-transform: uppercase;
             letter-spacing: 0.1em;
             color: var(--text-secondary);
-            margin-bottom: 12px;
+            margin-bottom: 6px;
         }
 
         .upload-area {
             position: relative;
             border: 2px dashed var(--border);
-            border-radius: 16px;
-            padding: 40px 24px;
+            border-radius: 12px;
+            padding: 20px 16px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s;
@@ -196,9 +199,9 @@
         .upload-area input { display: none; }
 
         .upload-icon {
-            width: 56px;
-            height: 56px;
-            margin: 0 auto 16px;
+            width: 40px;
+            height: 40px;
+            margin: 0 auto 8px;
             background: var(--gradient-1);
             border-radius: 16px;
             display: flex;
@@ -233,7 +236,7 @@
 
         textarea {
             flex: 1;
-            min-height: 200px;
+            min-height: 100px;
             background: var(--bg-secondary);
             border: 1px solid var(--border);
             border-radius: 12px;
@@ -253,8 +256,117 @@
 
         textarea::placeholder { color: var(--text-secondary); }
 
+        .toggle-switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            inset: 0;
+            background: var(--border);
+            border-radius: 24px;
+            transition: all 0.3s;
+        }
+
+        .toggle-slider::before {
+            content: '';
+            position: absolute;
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+
+        .toggle-switch input:checked + .toggle-slider {
+            background: var(--gradient-1);
+        }
+
+        .toggle-switch input:checked + .toggle-slider::before {
+            transform: translateX(20px);
+        }
+
+        .privacy-banner {
+            width: 100%;
+            padding: 16px;
+            background: rgba(99, 102, 241, 0.08);
+            border: 1px solid rgba(99, 102, 241, 0.25);
+            border-radius: 12px;
+            font-size: 13px;
+            color: var(--text);
+        }
+
+        .privacy-banner-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .privacy-banner-header strong {
+            color: #818cf8;
+            font-size: 14px;
+        }
+
+        .privacy-banner-header span {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .privacy-redactions table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .privacy-redactions thead th {
+            text-align: left;
+            padding: 6px 8px;
+            color: var(--text-secondary);
+            font-weight: 500;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .privacy-redactions tbody td {
+            padding: 6px 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+        }
+
+        .redact-cat {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            color: white;
+            font-size: 11px;
+            font-weight: 500;
+            font-family: inherit;
+        }
+
+        .redact-original {
+            color: var(--danger);
+            word-break: break-all;
+        }
+
+        .redact-replacement {
+            color: var(--success);
+            word-break: break-all;
+        }
+
         .scan-btn {
-            padding: 16px 32px;
+            padding: 12px 24px;
             background: var(--gradient-1);
             border: none;
             border-radius: 12px;
@@ -281,12 +393,21 @@
         .scan-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 32px var(--accent-glow); }
         .scan-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
+        .ai-disclaimer {
+            font-size: 10px;
+            color: var(--text-secondary);
+            text-align: center;
+            line-height: 1.4;
+            opacity: 0.7;
+            margin: 0;
+        }
+
         /* Results Section */
         .results-section {
-            padding: 32px;
+            padding: 20px;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
+            overflow-y: auto;
         }
 
         /* Empty State */
@@ -352,7 +473,7 @@
         }
 
         /* Results */
-        .results-content { display: none; flex-direction: column; gap: 24px; flex: 1; overflow: hidden; }
+        .results-content { display: none; flex-direction: column; gap: 20px; }
 
         /* Score Card */
         .score-card {
@@ -455,12 +576,9 @@
 
         /* Issues Grid */
         .issues-grid {
-            flex: 1;
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 16px;
-            overflow-y: auto;
-            padding-right: 8px;
         }
 
         .issues-grid::-webkit-scrollbar { width: 6px; }
@@ -837,45 +955,262 @@
         /* SVG Gradients */
         .svg-defs { position: absolute; width: 0; height: 0; }
 
-        /* API Key Screen */
-        .api-key-screen {
+        /* Settings Panel */
+        .settings-panel {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .settings-header {
+            width: 100%;
+            padding: 10px 14px;
+            background: transparent;
+            border: none;
+            color: var(--text);
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+
+        .settings-header:hover { background: var(--card-hover); }
+
+        .settings-chevron {
+            width: 16px;
+            height: 16px;
+            color: var(--text-secondary);
+            transition: transform 0.3s;
+        }
+
+        .settings-panel.collapsed .settings-chevron {
+            transform: rotate(-90deg);
+        }
+
+        .settings-body {
+            padding: 0 10px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .settings-panel.collapsed .settings-body {
+            display: none;
+        }
+
+        .provider-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 8px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+
+        .provider-row-label {
+            width: 75px;
+            flex-shrink: 0;
+            font-size: 12px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .env-badge {
+            font-size: 9px;
+            font-weight: 700;
+            padding: 1px 4px;
+            border-radius: 3px;
+            background: var(--success);
+            color: white;
+            letter-spacing: 0.05em;
+        }
+
+        .provider-key-input {
+            flex: 1;
+            min-width: 0;
+            padding: 5px 8px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 11px;
+            font-family: 'SF Mono', Monaco, monospace;
+            color: var(--text);
+            transition: border-color 0.2s;
+        }
+
+        .provider-key-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .provider-key-input::placeholder { color: var(--text-secondary); }
+        .provider-key-input:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .toggle-sm {
+            width: 34px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+
+        .toggle-sm .toggle-slider::before {
+            height: 14px;
+            width: 14px;
+        }
+
+        .toggle-sm input:checked + .toggle-slider::before {
+            transform: translateX(14px);
+        }
+
+        /* Model Dropdown */
+        .model-dropdown {
+            width: 100%;
+            padding: 10px 32px 10px 12px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 13px;
+            color: var(--text);
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23a1a1aa' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            transition: border-color 0.2s;
+        }
+
+        .model-dropdown:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .model-dropdown option {
+            background: var(--bg-secondary);
+            color: var(--text);
+        }
+
+        /* Scan Row */
+        .scan-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .scan-row .scan-btn {
+            flex: 1;
+        }
+
+        .privacy-toggle {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            flex-shrink: 0;
+            position: relative;
+            user-select: none;
+        }
+
+        .privacy-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+            position: absolute;
+        }
+
+        .privacy-toggle .toggle-slider {
+            width: 34px;
+            height: 20px;
+            background: var(--border);
+            border-radius: 20px;
+            position: relative;
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+
+        .privacy-toggle .toggle-slider::before {
+            content: '';
+            position: absolute;
+            height: 14px;
+            width: 14px;
+            left: 3px;
+            top: 3px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+
+        .privacy-toggle input:checked + .toggle-slider {
+            background: var(--accent);
+        }
+
+        .privacy-toggle input:checked + .toggle-slider::before {
+            transform: translateX(14px);
+        }
+
+        .privacy-label {
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+
+        /* Welcome / Onboarding Screen */
+        .welcome-screen {
             position: fixed;
             inset: 0;
-            background: var(--bg);
             z-index: 2000;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 32px;
+            background: var(--bg);
+            animation: fadeIn 0.4s ease-out;
         }
 
-        .api-key-card {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-            border-radius: 24px;
-            padding: 48px;
-            max-width: 480px;
-            width: 100%;
+        .welcome-screen .bg-gradient {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .welcome-card {
+            position: relative;
+            z-index: 1;
             text-align: center;
-            animation: modalIn 0.4s ease-out;
+            max-width: 520px;
+            width: 100%;
+            padding: 0 24px;
         }
 
-        .api-key-logo {
-            width: 72px;
-            height: 72px;
+        .welcome-logo {
+            width: 64px;
+            height: 64px;
             background: var(--gradient-1);
             border-radius: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 24px;
-            box-shadow: 0 8px 32px var(--accent-glow);
+            margin: 0 auto 20px;
+            box-shadow: 0 8px 40px var(--accent-glow);
         }
 
-        .api-key-logo svg { width: 40px; height: 40px; color: white; }
+        .welcome-logo svg { width: 32px; height: 32px; color: white; }
 
-        .api-key-card h2 {
-            font-size: 24px;
+        .welcome-title {
+            font-size: 28px;
             font-weight: 700;
             margin-bottom: 8px;
             background: var(--gradient-1);
@@ -884,291 +1219,162 @@
             background-clip: text;
         }
 
-        .api-key-card .subtitle {
-            font-size: 14px;
+        .welcome-subtitle {
+            font-size: 15px;
             color: var(--text-secondary);
             margin-bottom: 32px;
-            line-height: 1.6;
         }
 
-        .api-key-input-wrapper {
-            position: relative;
-            margin-bottom: 16px;
+        .provider-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 24px;
         }
 
-        .api-key-input {
-            width: 100%;
-            padding: 16px 20px;
-            background: var(--bg);
+        .provider-card {
+            background: var(--card);
             border: 2px solid var(--border);
-            border-radius: 12px;
-            font-size: 14px;
-            color: var(--text);
-            font-family: 'JetBrains Mono', monospace;
-            transition: all 0.2s;
-        }
-
-        .api-key-input:focus {
-            outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 4px var(--accent-glow);
-        }
-
-        .api-key-input::placeholder { color: var(--text-secondary); }
-
-        .api-key-submit {
-            width: 100%;
-            padding: 16px 32px;
-            background: var(--gradient-1);
-            border: none;
-            border-radius: 12px;
-            font-size: 15px;
-            font-weight: 600;
-            color: white;
+            border-radius: 16px;
+            padding: 20px 16px;
             cursor: pointer;
             transition: all 0.3s;
-            box-shadow: 0 4px 24px var(--accent-glow);
-            margin-bottom: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
         }
 
-        .api-key-submit:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 32px var(--accent-glow);
+        .provider-card:hover {
+            border-color: var(--accent);
+            background: var(--card-hover);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px var(--accent-glow);
         }
 
-        .api-key-submit:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
+        .provider-card.selected {
+            border-color: var(--accent);
+            background: rgba(99,102,241,0.1);
+            box-shadow: 0 0 30px var(--accent-glow);
         }
 
-        .api-key-error {
-            color: var(--critical);
-            font-size: 13px;
-            margin-bottom: 16px;
-            display: none;
-        }
-
-        .api-key-link {
-            font-size: 13px;
-            color: var(--text-secondary);
-        }
-
-        .api-key-link a {
-            color: var(--accent);
-            text-decoration: none;
-        }
-
-        .api-key-link a:hover { text-decoration: underline; }
-
-        .api-key-remember {
+        .provider-card-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
-            margin-bottom: 24px;
-            font-size: 13px;
+            font-size: 22px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .provider-card-icon.anthropic { background: linear-gradient(135deg, #d97706, #b45309); }
+        .provider-card-icon.openai { background: linear-gradient(135deg, #10b981, #059669); }
+        .provider-card-icon.google { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .provider-card-icon.groq { background: linear-gradient(135deg, #f97316, #ea580c); }
+
+        .provider-card-name {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .provider-card-desc {
+            font-size: 11px;
             color: var(--text-secondary);
+            line-height: 1.4;
         }
 
-        .api-key-remember input {
-            width: 16px;
-            height: 16px;
-            accent-color: var(--accent);
+        .welcome-key-section {
+            display: none;
+            animation: fadeIn 0.3s ease-out;
         }
 
-        /* Provider Selector */
-        .provider-section {
-            margin-bottom: 24px;
-        }
+        .welcome-key-section.visible { display: block; }
 
-        .provider-tabs {
+        .welcome-key-row {
             display: flex;
             gap: 8px;
             margin-bottom: 12px;
-            flex-wrap: wrap;
         }
 
-        .provider-tab {
-            padding: 10px 16px;
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--text-secondary);
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .provider-tab:hover {
-            background: var(--card-hover);
-            border-color: var(--accent);
-        }
-
-        .provider-tab.active {
-            background: var(--accent);
-            border-color: var(--accent);
-            color: white;
-            box-shadow: 0 4px 16px var(--accent-glow);
-        }
-
-        .provider-tab .provider-icon {
-            width: 18px;
-            height: 18px;
-        }
-
-        .provider-tab.configured::after {
-            content: '✓';
-            font-size: 10px;
-            background: var(--success);
-            color: white;
-            padding: 2px 4px;
-            border-radius: 4px;
-            margin-left: 4px;
-        }
-
-        .model-selector {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-        }
-
-        .model-select {
+        .welcome-key-input {
             flex: 1;
             padding: 12px 16px;
             background: var(--bg-secondary);
             border: 1px solid var(--border);
-            border-radius: 10px;
-            font-size: 13px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-family: 'SF Mono', Monaco, monospace;
             color: var(--text);
-            cursor: pointer;
-            transition: all 0.2s;
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23a1a1aa' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 12px center;
-            padding-right: 36px;
+            transition: border-color 0.2s;
         }
 
-        .model-select:focus {
+        .welcome-key-input:focus {
             outline: none;
             border-color: var(--accent);
             box-shadow: 0 0 0 3px var(--accent-glow);
         }
 
-        .model-select option {
-            background: var(--bg-secondary);
-            color: var(--text);
-        }
+        .welcome-key-input::placeholder { color: var(--text-secondary); }
 
-        .model-info {
-            font-size: 11px;
-            color: var(--text-secondary);
-            display: flex;
-            gap: 12px;
-            margin-top: 8px;
-        }
-
-        .model-info span {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .model-info .speed { color: var(--success); }
-        .model-info .cost { color: var(--warning); }
-
-        /* API Key screen - provider tabs */
-        .api-key-providers {
-            display: flex;
-            gap: 8px;
-            justify-content: center;
-            margin-bottom: 24px;
-            flex-wrap: wrap;
-        }
-
-        .api-key-provider-tab {
-            padding: 8px 14px;
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            font-size: 12px;
-            font-weight: 500;
-            color: var(--text-secondary);
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .api-key-provider-tab:hover {
-            background: var(--card-hover);
-            border-color: var(--accent);
-        }
-
-        .api-key-provider-tab.active {
-            background: var(--accent);
-            border-color: var(--accent);
+        .welcome-go-btn {
+            padding: 12px 28px;
+            background: var(--gradient-1);
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
             color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 20px var(--accent-glow);
+            white-space: nowrap;
         }
 
-        .api-key-help {
+        .welcome-go-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px var(--accent-glow);
+        }
+
+        .welcome-go-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        .welcome-key-help {
             font-size: 12px;
             color: var(--text-secondary);
-            margin-top: 16px;
-            padding: 12px;
-            background: var(--card);
-            border-radius: 8px;
-            text-align: left;
         }
 
-        .api-key-help a {
+        .welcome-key-help a {
             color: var(--accent);
             text-decoration: none;
         }
 
-        .api-key-help a:hover { text-decoration: underline; }
+        .welcome-key-help a:hover { text-decoration: underline; }
+
+        .welcome-error {
+            display: none;
+            color: var(--critical);
+            font-size: 12px;
+            margin-top: 8px;
+        }
+
+        .welcome-skip {
+            margin-top: 20px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .welcome-skip a {
+            color: var(--accent);
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .welcome-skip a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
-    <!-- API Key Screen -->
-    <div class="api-key-screen" id="apiKeyScreen" style="display:none;">
-        <div class="bg-gradient"></div>
-        <div class="api-key-card">
-            <div class="api-key-logo">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                </svg>
-            </div>
-            <h2>Welcome to TerraGuard</h2>
-            <p class="subtitle">
-                Choose your AI provider and enter your API key to start scanning.
-            </p>
-            <div class="api-key-providers" id="apiKeyProviders">
-                <button class="api-key-provider-tab active" data-provider="anthropic">Anthropic</button>
-                <button class="api-key-provider-tab" data-provider="openai">OpenAI</button>
-                <button class="api-key-provider-tab" data-provider="google">Google</button>
-                <button class="api-key-provider-tab" data-provider="groq">Groq</button>
-            </div>
-            <div class="api-key-input-wrapper">
-                <input type="password" class="api-key-input" id="apiKeyInput" placeholder="sk-ant-api03-..." autocomplete="off">
-            </div>
-            <div class="api-key-error" id="apiKeyError"></div>
-            <div class="api-key-remember">
-                <input type="checkbox" id="rememberKey" checked>
-                <label for="rememberKey">Remember my API key</label>
-            </div>
-            <button class="api-key-submit" id="apiKeySubmit" onclick="submitApiKey()">
-                Start Scanning
-            </button>
-            <div class="api-key-help" id="apiKeyHelp">
-                <strong>Anthropic:</strong> Get your key at <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com</a>
-            </div>
-        </div>
-    </div>
-
     <svg class="svg-defs">
         <defs>
             <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -1178,6 +1384,54 @@
             </linearGradient>
         </defs>
     </svg>
+
+    <!-- Welcome Screen (first-time only) -->
+    <div class="welcome-screen" id="welcomeScreen" style="display:none;">
+        <div class="bg-gradient"></div>
+        <div class="welcome-card">
+            <div class="welcome-logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                </svg>
+            </div>
+            <h1 class="welcome-title">Welcome to TerraGuard</h1>
+            <p class="welcome-subtitle">Choose your AI provider to get started</p>
+
+            <div class="provider-grid" id="providerGrid">
+                <div class="provider-card" data-provider="anthropic" onclick="selectWelcomeProvider('anthropic')">
+                    <div class="provider-card-icon anthropic">A</div>
+                    <div class="provider-card-name">Anthropic</div>
+                    <div class="provider-card-desc">Claude Sonnet 4 &amp; Haiku</div>
+                </div>
+                <div class="provider-card" data-provider="openai" onclick="selectWelcomeProvider('openai')">
+                    <div class="provider-card-icon openai">O</div>
+                    <div class="provider-card-name">OpenAI</div>
+                    <div class="provider-card-desc">GPT-4o &amp; GPT-4o Mini</div>
+                </div>
+                <div class="provider-card" data-provider="google" onclick="selectWelcomeProvider('google')">
+                    <div class="provider-card-icon google">G</div>
+                    <div class="provider-card-name">Google</div>
+                    <div class="provider-card-desc">Gemini 1.5 Pro &amp; Flash</div>
+                </div>
+                <div class="provider-card" data-provider="groq" onclick="selectWelcomeProvider('groq')">
+                    <div class="provider-card-icon groq">Q</div>
+                    <div class="provider-card-name">Groq</div>
+                    <div class="provider-card-desc">Llama 3.3 70B &middot; Free tier!</div>
+                </div>
+            </div>
+
+            <div class="welcome-key-section" id="welcomeKeySection">
+                <div class="welcome-key-row">
+                    <input type="password" class="welcome-key-input" id="welcomeKeyInput" placeholder="Enter API key..." autocomplete="off">
+                    <button class="welcome-go-btn" id="welcomeGoBtn" onclick="submitWelcomeKey()">Go</button>
+                </div>
+                <p class="welcome-key-help" id="welcomeKeyHelp"></p>
+                <p class="welcome-error" id="welcomeError"></p>
+            </div>
+
+            <p class="welcome-skip" id="welcomeSkip" style="display:none;">Already have keys configured on the server? <a onclick="skipWelcome()">Skip setup</a></p>
+        </div>
+    </div>
 
     <div class="bg-gradient"></div>
 
@@ -1205,35 +1459,61 @@
 
         <main>
             <div class="input-section">
-                <!-- Provider/Model Selector -->
-                <div class="provider-section">
-                    <div class="section-label">AI Provider</div>
-                    <div class="provider-tabs" id="providerTabs">
-                        <button class="provider-tab active" data-provider="anthropic">
-                            <span class="provider-icon">🤖</span> Anthropic
-                        </button>
-                        <button class="provider-tab" data-provider="openai">
-                            <span class="provider-icon">🧠</span> OpenAI
-                        </button>
-                        <button class="provider-tab" data-provider="google">
-                            <span class="provider-icon">✨</span> Google
-                        </button>
-                        <button class="provider-tab" data-provider="groq">
-                            <span class="provider-icon">⚡</span> Groq
-                        </button>
-                    </div>
-                    <div class="model-selector">
-                        <select class="model-select" id="modelSelect">
-                            <option value="claude-sonnet-4-20250514">Claude Sonnet 4</option>
-                            <option value="claude-3-5-haiku-20241022">Claude 3.5 Haiku</option>
-                        </select>
-                    </div>
-                    <div class="model-info" id="modelInfo">
-                        <span class="speed">⚡ Fast</span>
-                        <span class="cost">💰 $3/1M tokens</span>
+                <!-- Settings Panel -->
+                <div class="settings-panel" id="settingsPanel">
+                    <button class="settings-header" onclick="toggleSettings()">
+                        <span>API Keys</span>
+                        <svg class="settings-chevron" id="settingsChevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+                    </button>
+                    <div class="settings-body" id="settingsBody">
+                        <div class="provider-row" data-provider="anthropic">
+                            <div class="provider-row-label">
+                                <span>Anthropic</span>
+                                <span class="env-badge" id="envBadge-anthropic" style="display:none;">ENV</span>
+                            </div>
+                            <input type="password" class="provider-key-input" id="key-anthropic" placeholder="sk-ant-api03-..." autocomplete="off">
+                            <label class="toggle-switch toggle-sm">
+                                <input type="checkbox" class="provider-toggle" data-provider="anthropic" id="toggle-anthropic">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="provider-row" data-provider="openai">
+                            <div class="provider-row-label">
+                                <span>OpenAI</span>
+                                <span class="env-badge" id="envBadge-openai" style="display:none;">ENV</span>
+                            </div>
+                            <input type="password" class="provider-key-input" id="key-openai" placeholder="sk-proj-..." autocomplete="off">
+                            <label class="toggle-switch toggle-sm">
+                                <input type="checkbox" class="provider-toggle" data-provider="openai" id="toggle-openai">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="provider-row" data-provider="google">
+                            <div class="provider-row-label">
+                                <span>Google</span>
+                                <span class="env-badge" id="envBadge-google" style="display:none;">ENV</span>
+                            </div>
+                            <input type="password" class="provider-key-input" id="key-google" placeholder="AIza..." autocomplete="off">
+                            <label class="toggle-switch toggle-sm">
+                                <input type="checkbox" class="provider-toggle" data-provider="google" id="toggle-google">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="provider-row" data-provider="groq">
+                            <div class="provider-row-label">
+                                <span>Groq</span>
+                                <span class="env-badge" id="envBadge-groq" style="display:none;">ENV</span>
+                            </div>
+                            <input type="password" class="provider-key-input" id="key-groq" placeholder="gsk_..." autocomplete="off">
+                            <label class="toggle-switch toggle-sm">
+                                <input type="checkbox" class="provider-toggle" data-provider="groq" id="toggle-groq">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
                     </div>
                 </div>
 
+                <!-- Upload -->
                 <div>
                     <div class="section-label">Upload Configuration</div>
                     <div class="upload-area" id="uploadArea">
@@ -1248,6 +1528,7 @@
                     </div>
                 </div>
 
+                <!-- Code Input -->
                 <div class="code-area">
                     <div class="section-label">Or Paste Code</div>
                     <textarea id="codeInput" placeholder="resource &quot;aws_instance&quot; &quot;web&quot; {
@@ -1256,9 +1537,19 @@
 }"></textarea>
                 </div>
 
-                <button class="scan-btn" id="scanBtn" onclick="analyze()">
-                    Scan for Vulnerabilities
-                </button>
+                <!-- Model + Scan -->
+                <select class="model-dropdown" id="modelDropdown"></select>
+                <div class="scan-row">
+                    <button class="scan-btn" id="scanBtn" onclick="analyze()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px;margin-right:6px;"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>Scan
+                    </button>
+                    <label class="privacy-toggle" title="Privacy Mode: anonymize sensitive data before sending to AI">
+                        <input type="checkbox" id="privacyMode">
+                        <span class="toggle-slider"></span>
+                        <span class="privacy-label">Privacy</span>
+                    </label>
+                </div>
+                <p class="ai-disclaimer">AI-generated results may not be 100% accurate. Always verify findings manually.</p>
             </div>
 
             <div class="results-section">
@@ -1275,6 +1566,7 @@
                 </div>
 
                 <div class="results-content" id="resultsContent">
+                    <div class="privacy-banner" id="privacyBanner" style="display:none;"></div>
                     <div class="config-badge" id="configBadge" style="display:none;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
@@ -1374,107 +1666,149 @@
 
         // Multi-provider state
         let providers = {};  // Loaded from backend
-        let selectedProvider = 'anthropic';
-        let selectedModel = null;
         let apiKeys = {};  // Per-provider API keys from localStorage
         let configuredProviders = {};  // Providers with env vars set
 
-        // Provider help links
-        const PROVIDER_LINKS = {
-            anthropic: { name: 'Anthropic', url: 'https://console.anthropic.com/settings/keys', placeholder: 'sk-ant-api03-...' },
-            openai: { name: 'OpenAI', url: 'https://platform.openai.com/api-keys', placeholder: 'sk-...' },
-            google: { name: 'Google', url: 'https://aistudio.google.com/app/apikey', placeholder: 'AIza...' },
-            groq: { name: 'Groq', url: 'https://console.groq.com/keys', placeholder: 'gsk_...' }
-        };
-
-        // Initialize - load provider info and check API keys
+        // Initialize - load provider info and populate settings panel
         async function init() {
             try {
                 const res = await fetch(API);
                 const data = await res.json();
                 providers = data.providers || {};
 
-                // Track which providers have env vars configured
                 for (const [pid, pdata] of Object.entries(providers)) {
                     configuredProviders[pid] = pdata.configured;
                 }
-
-                // Load saved API keys from localStorage
-                const saved = localStorage.getItem('terraguard_api_keys');
-                if (saved) {
-                    try { apiKeys = JSON.parse(saved); } catch (e) { apiKeys = {}; }
-                }
-
-                // Check if any provider is ready to use
-                const hasConfiguredProvider = Object.values(configuredProviders).some(v => v);
-                const hasSavedKey = Object.keys(apiKeys).length > 0;
-
-                if (hasConfiguredProvider || hasSavedKey) {
-                    // Auto-select first available provider
-                    if (hasConfiguredProvider) {
-                        selectedProvider = Object.entries(configuredProviders).find(([k, v]) => v)?.[0] || 'anthropic';
-                    } else if (hasSavedKey) {
-                        selectedProvider = Object.keys(apiKeys)[0];
-                    }
-                    $('apiKeyScreen').style.display = 'none';
-                } else {
-                    $('apiKeyScreen').style.display = 'flex';
-                }
-
-                // Initialize UI
-                updateProviderTabs();
-                updateModelSelect();
-                setupApiKeyProviderTabs();
-
             } catch (e) {
                 console.error('Init error:', e);
-                // Backend not running - check localStorage
-                const saved = localStorage.getItem('terraguard_api_keys');
-                if (saved) {
-                    try { apiKeys = JSON.parse(saved); } catch (e) { apiKeys = {}; }
+            }
+
+            // Load saved API keys from localStorage
+            const saved = localStorage.getItem('terraguard_api_keys');
+            if (saved) {
+                try { apiKeys = JSON.parse(saved); } catch (e) { apiKeys = {}; }
+            }
+
+            // Load saved toggle states
+            const savedToggles = localStorage.getItem('terraguard_provider_toggles');
+            let toggleState = null;
+            if (savedToggles) {
+                try { toggleState = JSON.parse(savedToggles); } catch (e) {}
+            }
+
+            // Populate settings panel
+            for (const pid of ['anthropic', 'openai', 'google', 'groq']) {
+                const keyInput = $('key-' + pid);
+                const toggle = $('toggle-' + pid);
+                const envBadge = $('envBadge-' + pid);
+
+                const hasEnv = configuredProviders[pid];
+                const hasSavedKey = !!apiKeys[pid];
+
+                // Show ENV badge for server-configured keys
+                if (hasEnv) {
+                    envBadge.style.display = '';
+                    keyInput.placeholder = 'Configured on server';
+                    keyInput.disabled = true;
                 }
-                if (Object.keys(apiKeys).length > 0) {
-                    selectedProvider = Object.keys(apiKeys)[0];
-                    $('apiKeyScreen').style.display = 'none';
+
+                // Fill saved key (shows as dots because type=password)
+                if (hasSavedKey) {
+                    keyInput.value = apiKeys[pid];
+                }
+
+                // Set toggle: use saved state if available, otherwise auto-enable keyed providers
+                if (toggleState) {
+                    toggle.checked = !!toggleState[pid];
                 } else {
-                    $('apiKeyScreen').style.display = 'flex';
+                    toggle.checked = hasEnv || hasSavedKey;
                 }
-                setupApiKeyProviderTabs();
+            }
+
+            // Build model dropdown from enabled providers
+            buildModelDropdown();
+
+            // Collapse settings if at least one provider is enabled
+            const anyEnabled = document.querySelectorAll('.provider-toggle:checked').length > 0;
+            if (anyEnabled) {
+                $('settingsPanel').classList.add('collapsed');
+            }
+
+            // Show welcome screen if never onboarded
+            const onboarded = localStorage.getItem('terraguard_onboarded');
+            if (!onboarded && !anyEnabled) {
+                $('welcomeScreen').style.display = 'flex';
+                // Show skip link if any providers are configured on server
+                const anyEnv = Object.values(configuredProviders).some(v => v);
+                if (anyEnv) {
+                    $('welcomeSkip').style.display = 'block';
+                }
             }
         }
 
-        function setupApiKeyProviderTabs() {
-            // API key screen provider tabs
-            document.querySelectorAll('.api-key-provider-tab').forEach(tab => {
-                tab.onclick = () => {
-                    document.querySelectorAll('.api-key-provider-tab').forEach(t => t.classList.remove('active'));
-                    tab.classList.add('active');
-                    const provider = tab.dataset.provider;
-                    updateApiKeyHelp(provider);
-                    // Clear input and error when switching providers
-                    $('apiKeyInput').value = '';
-                    $('apiKeyError').style.display = 'none';
-                };
-            });
-            updateApiKeyHelp('anthropic');
+        function toggleSettings() {
+            $('settingsPanel').classList.toggle('collapsed');
         }
 
-        function showApiKeyScreen(provider) {
-            // Clear previous input and errors
-            $('apiKeyInput').value = '';
-            $('apiKeyError').style.display = 'none';
-            // Select the right provider tab
-            document.querySelectorAll('.api-key-provider-tab').forEach(t => {
-                t.classList.toggle('active', t.dataset.provider === provider);
-            });
-            updateApiKeyHelp(provider);
-            $('apiKeyScreen').style.display = 'flex';
+        // --- Welcome screen ---
+        let welcomeProvider = null;
+
+        const PROVIDER_HELP = {
+            anthropic: { placeholder: 'sk-ant-api03-...', url: 'console.anthropic.com/settings/keys', name: 'Anthropic' },
+            openai: { placeholder: 'sk-proj-...', url: 'platform.openai.com/api-keys', name: 'OpenAI' },
+            google: { placeholder: 'AIza...', url: 'aistudio.google.com/app/apikey', name: 'Google' },
+            groq: { placeholder: 'gsk_...', url: 'console.groq.com/keys', name: 'Groq' }
+        };
+
+        function selectWelcomeProvider(pid) {
+            welcomeProvider = pid;
+            // Highlight selected card
+            document.querySelectorAll('.provider-card').forEach(c => c.classList.remove('selected'));
+            document.querySelector(`.provider-card[data-provider="${pid}"]`).classList.add('selected');
+
+            // Show key input
+            const info = PROVIDER_HELP[pid];
+            $('welcomeKeyInput').placeholder = info.placeholder;
+            $('welcomeKeyInput').value = '';
+            $('welcomeKeyHelp').innerHTML = `Get your <strong>${info.name}</strong> key at <a href="https://${info.url}" target="_blank">${info.url}</a>`;
+            $('welcomeError').style.display = 'none';
+            $('welcomeKeySection').classList.add('visible');
+            $('welcomeKeyInput').focus();
         }
 
-        function updateApiKeyHelp(provider) {
-            const info = PROVIDER_LINKS[provider];
-            $('apiKeyInput').placeholder = info.placeholder;
-            $('apiKeyHelp').innerHTML = `<strong>${info.name}:</strong> Get your key at <a href="${info.url}" target="_blank">${info.url.replace('https://', '')}</a>`;
+        function submitWelcomeKey() {
+            const key = $('welcomeKeyInput').value.trim();
+            if (!key) {
+                $('welcomeError').textContent = 'Please enter an API key';
+                $('welcomeError').style.display = 'block';
+                return;
+            }
+
+            if (!validateKeyFormat(key, welcomeProvider)) {
+                const fmt = KEY_FORMATS[welcomeProvider];
+                $('welcomeError').textContent = `Invalid key format. ${fmt.name} keys start with "${fmt.prefix}"`;
+                $('welcomeError').style.display = 'block';
+                return;
+            }
+
+            // Save key, enable provider, mark onboarded
+            apiKeys[welcomeProvider] = key;
+            localStorage.setItem('terraguard_api_keys', JSON.stringify(apiKeys));
+
+            $('key-' + welcomeProvider).value = key;
+            $('toggle-' + welcomeProvider).checked = true;
+            saveToggles();
+            buildModelDropdown();
+            $('settingsPanel').classList.add('collapsed');
+
+            localStorage.setItem('terraguard_onboarded', 'true');
+            $('welcomeScreen').style.display = 'none';
+        }
+
+        function skipWelcome() {
+            // User has env keys on server, skip intro
+            localStorage.setItem('terraguard_onboarded', 'true');
+            $('welcomeScreen').style.display = 'none';
         }
 
         // Key format validation per provider
@@ -1488,159 +1822,139 @@
         function validateKeyFormat(key, provider) {
             const format = KEY_FORMATS[provider];
             if (!format) return true;
-
-            // OpenAI keys start with sk- but NOT sk-ant-
             if (provider === 'openai') {
                 return key.startsWith(format.prefix) && !key.startsWith(format.exclude);
             }
-
             return key.startsWith(format.prefix);
         }
 
-        function submitApiKey() {
-            const input = $('apiKeyInput').value.trim();
-            const error = $('apiKeyError');
-            const activeTab = document.querySelector('.api-key-provider-tab.active');
-            const provider = activeTab?.dataset.provider || 'anthropic';
+        function buildModelDropdown() {
+            const select = $('modelDropdown');
+            select.innerHTML = '';
 
-            if (!input) {
-                error.textContent = 'Please enter an API key';
-                error.style.display = 'block';
-                return;
-            }
-
-            // Validate key format matches provider
-            if (!validateKeyFormat(input, provider)) {
-                const format = KEY_FORMATS[provider];
-                error.textContent = `Invalid ${format.name} key format. Keys should start with "${format.prefix}" (e.g., ${format.example})`;
-                error.style.display = 'block';
-                return;
-            }
-
-            // Store the key
-            apiKeys[provider] = input;
-            selectedProvider = provider;
-
-            // Save to localStorage if checkbox is checked
-            if ($('rememberKey').checked) {
-                localStorage.setItem('terraguard_api_keys', JSON.stringify(apiKeys));
-            }
-
-            $('apiKeyScreen').style.display = 'none';
-            error.style.display = 'none';
-
-            // Update main UI
-            updateProviderTabs();
-            updateModelSelect();
-        }
-
-        function updateProviderTabs() {
-            document.querySelectorAll('#providerTabs .provider-tab').forEach(tab => {
-                const pid = tab.dataset.provider;
-                tab.classList.toggle('active', pid === selectedProvider);
-                tab.classList.toggle('configured', configuredProviders[pid] || apiKeys[pid]);
+            const enabledList = [];
+            document.querySelectorAll('.provider-toggle:checked').forEach(t => {
+                enabledList.push(t.dataset.provider);
             });
-        }
 
-        function updateModelSelect() {
-            const select = $('modelSelect');
-            const providerData = providers[selectedProvider];
-
-            if (!providerData) {
-                // Fallback if providers not loaded
-                const fallbackModels = {
-                    anthropic: [
-                        { id: 'claude-sonnet-4-20250514', name: 'Claude Sonnet 4', speed: 'Fast', cost: '$3/1M tokens' },
-                        { id: 'claude-3-5-haiku-20241022', name: 'Claude 3.5 Haiku', speed: 'Very Fast', cost: '$0.25/1M tokens' }
-                    ],
-                    openai: [
-                        { id: 'gpt-4o', name: 'GPT-4o', speed: 'Fast', cost: '$2.50/1M tokens' },
-                        { id: 'gpt-4o-mini', name: 'GPT-4o Mini', speed: 'Very Fast', cost: '$0.15/1M tokens' }
-                    ],
-                    google: [
-                        { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro', speed: 'Fast', cost: '$1.25/1M tokens' },
-                        { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', speed: 'Very Fast', cost: '$0.075/1M tokens' }
-                    ],
-                    groq: [
-                        { id: 'llama-3.3-70b-versatile', name: 'Llama 3.3 70B', speed: 'Blazing Fast', cost: 'Free tier!' },
-                        { id: 'llama-3.1-8b-instant', name: 'Llama 3.1 8B', speed: 'Ultra Fast', cost: 'Free tier!' }
-                    ]
-                };
-                const models = fallbackModels[selectedProvider] || fallbackModels.anthropic;
-                select.innerHTML = models.map(m =>
-                    `<option value="${m.id}" data-speed="${m.speed}" data-cost="${m.cost}">${m.name}</option>`
-                ).join('');
-                selectedModel = models[0].id;
-                updateModelInfo(models[0].speed, models[0].cost);
+            if (enabledList.length === 0) {
+                const opt = document.createElement('option');
+                opt.disabled = true;
+                opt.selected = true;
+                opt.textContent = 'Enable a provider above';
+                select.appendChild(opt);
                 return;
             }
 
-            // Build options from backend data
-            select.innerHTML = Object.entries(providerData.models).map(([id, info]) =>
-                `<option value="${id}" data-speed="${info.speed}" data-cost="${info.cost}">${info.name}</option>`
-            ).join('');
+            const fallbackModels = {
+                anthropic: [
+                    { id: 'claude-sonnet-4-20250514', name: 'Claude Sonnet 4', speed: 'Fast', cost: '$3/1M' },
+                    { id: 'claude-3-5-haiku-20241022', name: 'Claude 3.5 Haiku', speed: 'Very Fast', cost: '$0.25/1M' }
+                ],
+                openai: [
+                    { id: 'gpt-4o', name: 'GPT-4o', speed: 'Fast', cost: '$2.50/1M' },
+                    { id: 'gpt-4o-mini', name: 'GPT-4o Mini', speed: 'Very Fast', cost: '$0.15/1M' }
+                ],
+                google: [
+                    { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro', speed: 'Fast', cost: '$1.25/1M' },
+                    { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', speed: 'Very Fast', cost: '$0.075/1M' }
+                ],
+                groq: [
+                    { id: 'llama-3.3-70b-versatile', name: 'Llama 3.3 70B', speed: 'Blazing', cost: 'Free' },
+                    { id: 'llama-3.1-8b-instant', name: 'Llama 3.1 8B', speed: 'Ultra Fast', cost: 'Free' }
+                ]
+            };
 
-            selectedModel = providerData.default_model;
-            select.value = selectedModel;
+            const providerNames = { anthropic: 'Anthropic', openai: 'OpenAI', google: 'Google', groq: 'Groq' };
+            let firstOption = null;
 
-            // Update model info
-            const modelInfo = providerData.models[selectedModel];
-            if (modelInfo) {
-                updateModelInfo(modelInfo.speed, modelInfo.cost);
+            for (const pid of enabledList) {
+                const group = document.createElement('optgroup');
+                group.label = providerNames[pid] || pid;
+
+                const providerData = providers[pid];
+                let models;
+                if (providerData?.models) {
+                    models = Object.entries(providerData.models).map(([id, info]) => ({
+                        id, name: info.name, speed: info.speed, cost: info.cost
+                    }));
+                } else {
+                    models = fallbackModels[pid] || [];
+                }
+
+                for (const m of models) {
+                    const opt = document.createElement('option');
+                    opt.value = `${pid}|${m.id}`;
+                    opt.textContent = `${m.name}  ·  ${m.speed}  ·  ${m.cost}`;
+                    group.appendChild(opt);
+                    if (!firstOption) firstOption = opt;
+                }
+
+                select.appendChild(group);
             }
+
+            if (firstOption) firstOption.selected = true;
         }
 
-        function updateModelInfo(speed, cost) {
-            $('modelInfo').innerHTML = `
-                <span class="speed">⚡ ${speed}</span>
-                <span class="cost">💰 ${cost}</span>
-            `;
+        function saveToggles() {
+            const toggles = {};
+            document.querySelectorAll('.provider-toggle').forEach(t => {
+                toggles[t.dataset.provider] = t.checked;
+            });
+            localStorage.setItem('terraguard_provider_toggles', JSON.stringify(toggles));
         }
 
-        // Handle provider tab clicks
+        // Handle settings panel key inputs and toggles
         document.addEventListener('DOMContentLoaded', () => {
             init();
 
-            // Main provider tabs
-            document.querySelectorAll('#providerTabs .provider-tab').forEach(tab => {
-                tab.onclick = () => {
-                    const provider = tab.dataset.provider;
-
-                    // Check if we have access to this provider
-                    if (!configuredProviders[provider] && !apiKeys[provider]) {
-                        // Need API key - show the key screen with this provider selected
-                        showApiKeyScreen(provider);
-                        return;
+            // Key inputs: validate and save on change/blur
+            document.querySelectorAll('.provider-key-input').forEach(input => {
+                const pid = input.id.replace('key-', '');
+                input.addEventListener('change', () => {
+                    const val = input.value.trim();
+                    if (val) {
+                        if (!validateKeyFormat(val, pid)) {
+                            const fmt = KEY_FORMATS[pid];
+                            alert(`Invalid ${fmt.name} key. Expected format: ${fmt.example}`);
+                            input.value = apiKeys[pid] || '';
+                            return;
+                        }
+                        apiKeys[pid] = val;
+                    } else {
+                        delete apiKeys[pid];
                     }
-
-                    selectedProvider = provider;
-                    updateProviderTabs();
-                    updateModelSelect();
-                };
+                    localStorage.setItem('terraguard_api_keys', JSON.stringify(apiKeys));
+                });
             });
 
-            // Model select change
-            $('modelSelect').onchange = (e) => {
-                selectedModel = e.target.value;
-                const opt = e.target.selectedOptions[0];
-                updateModelInfo(opt.dataset.speed, opt.dataset.cost);
-            };
+            // Toggle changes: save state and rebuild model dropdown
+            document.querySelectorAll('.provider-toggle').forEach(toggle => {
+                toggle.addEventListener('change', () => {
+                    saveToggles();
+                    buildModelDropdown();
+                });
+            });
 
-            // API key input enter
-            $('apiKeyInput').addEventListener('keypress', e => {
-                if (e.key === 'Enter') submitApiKey();
+            // Welcome screen: Enter key to submit
+            $('welcomeKeyInput').addEventListener('keypress', e => {
+                if (e.key === 'Enter') submitWelcomeKey();
             });
         });
 
         function getHeaders() {
+            const val = $('modelDropdown').value || '';
+            const [provider, model] = val.includes('|') ? val.split('|') : ['', ''];
+
             const headers = {
-                'X-Provider': selectedProvider,
-                'X-Model': selectedModel || ''
+                'X-Provider': provider,
+                'X-Model': model,
+                'X-Anonymize': $('privacyMode').checked ? 'true' : 'false'
             };
 
             // Add API key if we have one and provider isn't configured in env
-            if (!configuredProviders[selectedProvider] && apiKeys[selectedProvider]) {
-                headers['X-API-Key'] = apiKeys[selectedProvider];
+            if (provider && !configuredProviders[provider] && apiKeys[provider]) {
+                headers['X-API-Key'] = apiKeys[provider];
             }
 
             return headers;
@@ -1654,6 +1968,14 @@
             localStorage.setItem('theme', document.documentElement.classList.contains('light') ? 'light' : 'dark');
         }
         if (localStorage.getItem('theme') === 'light') document.documentElement.classList.add('light');
+
+        // Privacy mode persistence
+        if (localStorage.getItem('terraguard_privacy_mode') === 'true') {
+            $('privacyMode').checked = true;
+        }
+        $('privacyMode').onchange = () => {
+            localStorage.setItem('terraguard_privacy_mode', $('privacyMode').checked);
+        };
 
         // File handling
         const SUPPORTED_EXTENSIONS = /\.(tf|tf\.json|yaml|yml|json|template|tpl|dockerfile)$/i;
@@ -1703,24 +2025,23 @@
                 });
                 if (!res.ok) {
                     const err = await res.json();
-                    // If API key error, show the key screen again
                     if (res.status === 401) {
-                        // Remove the bad key for this provider
-                        delete apiKeys[selectedProvider];
-                        localStorage.setItem('terraguard_api_keys', JSON.stringify(apiKeys));
-
-                        showApiKeyScreen(selectedProvider);
-                        // Show the error message
-                        $('apiKeyError').textContent = err.detail;
-                        $('apiKeyError').style.display = 'block';
-                        throw new Error('API key required');
+                        // Remove the bad key and open settings panel
+                        const badProvider = ($('modelDropdown').value || '').split('|')[0];
+                        if (badProvider) {
+                            delete apiKeys[badProvider];
+                            localStorage.setItem('terraguard_api_keys', JSON.stringify(apiKeys));
+                            $('key-' + badProvider).value = '';
+                        }
+                        $('settingsPanel').classList.remove('collapsed');
+                        throw new Error(err.detail || 'Invalid API key — check Settings above');
                     }
                     throw new Error(err.detail || 'Failed');
                 }
                 review = await res.json();
                 showResults();
             } catch (e) {
-                if (e.message !== 'API key required') alert(e.message);
+                alert(e.message);
                 $('emptyState').style.display = 'flex';
             } finally {
                 $('loadingState').style.display = 'none';
@@ -1739,6 +2060,38 @@
         function showResults() {
             const r = review.review;
             $('resultsContent').style.display = 'flex';
+
+            // Privacy mode banner
+            const privacyBanner = $('privacyBanner');
+            if (review.privacy?.enabled && review.privacy.items_redacted > 0) {
+                const catLabels = { secret: 'Secret', ip: 'IP Address', arn: 'ARN', domain: 'Domain', email: 'Email', bucket: 'S3 Bucket', account_id: 'Account ID', other: 'Other' };
+                const catColors = { secret: '#ef4444', ip: '#f59e0b', arn: '#8b5cf6', domain: '#3b82f6', email: '#06b6d4', bucket: '#10b981', account_id: '#f97316', other: '#6b7280' };
+
+                let html = `<div class="privacy-banner-header">
+                    <strong>Privacy Mode Active</strong>
+                    <span>${review.privacy.items_redacted} item${review.privacy.items_redacted > 1 ? 's' : ''} redacted before sending to AI</span>
+                </div>
+                <div class="privacy-redactions">
+                    <table>
+                        <thead><tr><th>Type</th><th>Original Value</th><th>Sent to AI As</th></tr></thead>
+                        <tbody>`;
+
+                for (const item of review.privacy.redactions) {
+                    const label = catLabels[item.category] || item.category;
+                    const color = catColors[item.category] || '#6b7280';
+                    html += `<tr>
+                        <td><span class="redact-cat" style="background:${color}">${esc(label)}</span></td>
+                        <td class="redact-original">${esc(item.original)}</td>
+                        <td class="redact-replacement">${esc(item.replacement)}</td>
+                    </tr>`;
+                }
+
+                html += `</tbody></table></div>`;
+                privacyBanner.innerHTML = html;
+                privacyBanner.style.display = 'block';
+            } else {
+                privacyBanner.style.display = 'none';
+            }
 
             // Show config type
             const configType = review.config_type || 'terraform';
