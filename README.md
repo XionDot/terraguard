@@ -5,11 +5,11 @@
 Scan your Terraform, CloudFormation, Kubernetes, Dockerfiles, and Helm charts for security vulnerabilities, misconfigurations, and hardcoded secrets.
 
 <p align="center">
-  <img src="screenshot-1.png" alt="TerraGuard Security Analysis" width="800">
+  <img src="TerraGuard - Infrastructure Security - Intro.png" alt="TerraGuard Welcome Screen" width="800">
 </p>
 
 <p align="center">
-  <img src="screenshot-2.png" alt="TerraGuard Results" width="800">
+  <img src="TerraGuard - Infrastructure Security.png" alt="TerraGuard Security Scanner" width="800">
 </p>
 
 ---
